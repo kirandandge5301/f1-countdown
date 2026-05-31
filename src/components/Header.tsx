@@ -6,7 +6,7 @@ import { TIMEZONE_OPTIONS } from '@/data/timezones';
 
 const NAV_LINKS = [
   { label: 'next race', href: '#next-race' },
-  { label: 'calendar', href: '#schedule' },
+  { label: 'schedule', href: '#schedule' },
   { label: 'watch', href: '#how-to-watch' },
   { label: 'standings', href: '#standings' }
 ];
