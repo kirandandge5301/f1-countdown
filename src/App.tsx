@@ -6,12 +6,13 @@ import NextRaceSection from '@/sections/NextRaceSection';
 import ScheduleSection from '@/sections/ScheduleSection';
 import HowToWatchSection from '@/sections/HowToWatchSection';
 import StandingsSection from '@/sections/StandingsSection';
-
+import ApiTest from '@/components/ApiTest';
 function App() {
   return (
     <ThemeProvider>
       <TimezoneProvider>
-        <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300">
+        <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300">ō
+          <ApiTest />
           <Header />
           <main>
             <NextRaceSection />
