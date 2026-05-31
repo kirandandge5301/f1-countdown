@@ -86,7 +86,7 @@ export default function Header() {
 
 <div className="flex items-center gap-2">
   <span className="text-[15px] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
-    f1 countdown
+    GPCountdown
   </span>
 
   <span className="text-[15px] text-[var(--text-secondary)]">
