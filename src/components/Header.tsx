@@ -5,12 +5,11 @@ import { useTimezone } from '@/context/TimezoneContext';
 import { TIMEZONE_OPTIONS } from '@/data/timezones';
 
 const NAV_LINKS = [
-  { label: 'Next Race', href: '#next-race' },
-  { label: 'Schedule', href: '#schedule' },
-  { label: 'How to Watch', href: '#how-to-watch' },
-  { label: 'Standings', href: '#standings' }
+  { label: 'next race', href: '#next-race' },
+  { label: 'calendar', href: '#schedule' },
+  { label: 'watch', href: '#how-to-watch' },
+  { label: 'standings', href: '#standings' }
 ];
-
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const { timezone, timezoneLabel, setTimezone } = useTimezone();
@@ -84,8 +83,16 @@ export default function Header() {
             className="flex items-center gap-2 shrink-0"
           >
             <span className="w-2 h-2 rounded-full bg-[#E10600]" />
-            <span className="text-lg font-bold text-[var(--text-primary)]">GPCountdown</span>
-            <span className="text-lg font-normal text-[var(--text-secondary)] tracking-[0.08em]">/ 2026</span>
+
+<div className="flex items-center gap-2">
+  <span className="text-[15px] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
+    f1 countdown
+  </span>
+
+  <span className="text-[15px] text-[var(--text-secondary)]">
+    2026
+  </span>
+</div>
           </button>
 
           {/* Desktop Nav */}
