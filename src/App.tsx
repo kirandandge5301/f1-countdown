@@ -16,7 +16,13 @@ function App() {useEffect(() => {
     const races = data.MRData.RaceTable.Races;
 
     console.log('FIRST RACE:', races[0]);
-    console.log('LAST RACE:', races[races.length - 1]);
+console.log('LAST RACE:', races[races.length - 1]);
+
+const upcoming = races.find(
+  (race: any) => new Date(race.date) > new Date()
+);
+
+console.log('NEXT UPCOMING RACE:', upcoming);
   })
     .catch(error => {
       console.error(error);
