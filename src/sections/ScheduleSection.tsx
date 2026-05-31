@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { RACES } from '@/data/races';
+import { useF1Schedule } from '@/hooks/useF1Schedule';
 import { useTimezone } from '@/context/TimezoneContext';
 import { formatRaceTimeInZone } from '@/data/timezones';
 import { findNextRaceAndSession } from '@/data/raceLogic';
@@ -8,7 +8,7 @@ import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 export default function ScheduleSection() {
   const { timezone, timezoneLabel } = useTimezone();
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLElement>({ threshold: 0.1 });
-
+  const { races, loading } = useF1Schedule();
   const { race: nextRace } = useMemo(() => findNextRaceAndSession(), []);
 
   const formatDateDisplay = (dateStr: string, day: string) => {
@@ -17,7 +17,9 @@ export default function ScheduleSection() {
     const month = d.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
     return `${day} ${dayNum} ${month}`;
   };
-
+if (loading) {
+  return null;
+}
   return (
     <section
       ref={sectionRef}
@@ -53,7 +55,7 @@ export default function ScheduleSection() {
         </div>
 
         {/* Race Rows */}
-        {RACES.map((race, i) => {
+        {races.map((race, i) => {
           const isNext = nextRace && race.round === nextRace.round;
           const raceTime = formatRaceTimeInZone(race.raceUTC, race.date, timezone);
 
