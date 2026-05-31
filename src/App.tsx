@@ -25,7 +25,7 @@ function App() {useEffect(() => {
   return (
     <ThemeProvider>
       <TimezoneProvider>
-        <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300">ō
+        <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300">
       
           <Header />
           <main>
