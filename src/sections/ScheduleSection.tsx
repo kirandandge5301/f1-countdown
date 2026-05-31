@@ -11,12 +11,7 @@ export default function ScheduleSection() {
   const { races, loading } = useF1Schedule();
   const { race: nextRace } = useMemo(() => findNextRaceAndSession(), []);
 
-  const formatDateDisplay = (dateStr: string, day: string) => {
-    const d = new Date(dateStr + 'T00:00:00Z');
-    const dayNum = d.getUTCDate().toString().padStart(2, '0');
-    const month = d.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
-    return `${day} ${dayNum} ${month}`;
-  };
+  
 if (loading) {
   return null;
 }
