@@ -6,9 +6,9 @@ import NextRaceSection from '@/sections/NextRaceSection';
 import ScheduleSection from '@/sections/ScheduleSection';
 import HowToWatchSection from '@/sections/HowToWatchSection';
 import StandingsSection from '@/sections/StandingsSection';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchCurrentSchedule } from './f1api';
-function App() {useEffect(() => {
+function App() {useEffect(() => { 
   fetchCurrentSchedule()
   .then(data => {
     console.log('F1 API:', data);
