@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== DARK MODE (default) ===== */
+.dark {
+  --bg-primary: #0A0A0A;
+  --bg-surface: #111111;
+  --bg-surface-hover: #1A1A1A;
+  --text-primary: #FFFFFF;
+  --text-secondary: #888888;
+  --text-tertiary: #444444;
+  --text-hero-countdown: #FFFFFF;
+  --accent-red: #E10600;
+  --border-subtle: #222222;
+  --card-shadow: 0 0 0 1px #222222;
+  --card-shadow-hover: 0 0 0 1px #333333;
+  --hero-grid-lines: rgba(255,255,255,0.06);
+  --hero-grid-major: rgba(255,255,255,0.03);
+  --active-card-bg: #FFFFFF;
+  --active-card-text: #111111;
+  --badge-sprint: #E10600;
+  --badge-sprint-text: #FFFFFF;
+  --broadcast-red-card: #E10600;
+  --broadcast-dark-card: #111111;
+  --row-hover: rgba(255,255,255,0.03);
+  --next-race-glow: radial-gradient(ellipse at center, rgba(225,6,0,0.08) 0%, transparent 70%);
+}
+
+/* ===== LIGHT MODE ===== */
+.light {
+  --bg-primary: #FFFFFF;
+  --bg-surface: #F5F5F5;
+  --bg-surface-hover: #EBEBEB;
+  --text-primary: #111111;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --text-hero-countdown: #000000;
+  --accent-red: #E10600;
+  --border-subtle: #E5E5E5;
+  --card-shadow: 0 0 0 1px #E5E5E5;
+  --card-shadow-hover: 0 0 0 1px #CCCCCC;
+  --hero-grid-lines: rgba(0,0,0,0.06);
+  --hero-grid-major: rgba(0,0,0,0.03);
+  --active-card-bg: #111111;
+  --active-card-text: #FFFFFF;
+  --badge-sprint: #E10600;
+  --badge-sprint-text: #FFFFFF;
+  --broadcast-red-card: #E10600;
+  --broadcast-dark-card: #F0F0F0;
+  --row-hover: rgba(0,0,0,0.03);
+  --next-race-glow: radial-gradient(ellipse at center, rgba(225,6,0,0.04) 0%, transparent 70%);
+}
+
+@layer base {
+  html {
+    font-family: 'SF Pro Display', 'SF Pro Text', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  * {
+    border-color: var(--border-subtle);
+  }
+
+  ::selection {
+    background-color: rgba(225, 6, 0, 0.3);
+    color: var(--text-primary);
+  }
+}
+
+/* ===== MONOSPACE FONT UTILITIES ===== */
+.font-mono {
+  font-family: 'SF Mono', 'SF Mono Square', 'SFMono-Regular', Menlo, Consolas, monospace;
+}
+
+/* ===== TABULAR NUMS ===== */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+.animate-fade-in {
+  animation: fadeIn 400ms ease-out forwards;
+  opacity: 0;
+}
+
+.animate-slide-up {
+  animation: slideUp 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-fade-in,
+  .animate-slide-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
