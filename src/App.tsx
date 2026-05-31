@@ -10,9 +10,14 @@ import { useEffect } from 'react';
 import { fetchCurrentSchedule } from './f1api';
 function App() {useEffect(() => {
   fetchCurrentSchedule()
-    .then(data => {
-      console.log('F1 API:', data);
-    })
+  .then(data => {
+    console.log('F1 API:', data);
+
+    const races = data.MRData.RaceTable.Races;
+
+    console.log('FIRST RACE:', races[0]);
+    console.log('LAST RACE:', races[races.length - 1]);
+  })
     .catch(error => {
       console.error(error);
     });
