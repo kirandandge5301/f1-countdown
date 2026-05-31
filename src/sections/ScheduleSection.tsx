@@ -55,7 +55,7 @@ if (loading) {
         </div>
 
         {/* Race Rows */}
-        {races.map((race, i) => {
+        {races.slice(0, 3).map((race, i) => {
           const isNext = nextRace && race.round === nextRace.round;
           const raceTime = formatRaceTimeInZone(race.raceUTC, race.date, timezone);
 
@@ -77,7 +77,7 @@ if (loading) {
 
               {/* Date */}
               <span className="font-mono text-sm text-[var(--text-primary)]">
-                {formatDateDisplay(race.date, race.day)}
+                {race.date}
               </span>
 
               {/* Country Code */}
