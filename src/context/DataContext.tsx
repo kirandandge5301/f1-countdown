@@ -1,6 +1,6 @@
 /**
  * Data Context - Manages all OpenF1 API data
- * Fixed next race detection + proper timezone handling
+ * Fixed next race detection (Monaco should now show correctly)
  */
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
@@ -112,22 +112,83 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }));
 
         setRaceWeekends(fallbackWeekends);
-        setNextRace(findNextRace(fallbackWeekends));   // This should now correctly pick Monaco
+        setNextRace(findNextRace(fallbackWeekends));
         setIsUsingFallback(true);
       }
 
       setDriverStandings(dStandings || FALLBACK_DRIVERS.map(d => ({
-        ...d,
+        position: d.position,
+        firstName: d.firstName,
+        lastName: d.lastName,
+        team: d.team,
+        teamColor: d.teamColor,
+        points: d.points,
+        wins: d.wins,
         driverNumber: 0,
         headshotUrl: ''
       })));
+
       setConstructorStandings(cStandings || FALLBACK_CONSTRUCTORS);
       setLastUpdated(new Date());
     } catch (err) {
       console.error('API failed, using fallback', err);
-      const fallbackWeekends: RaceWeekend[] = FALLBACK_RACES.map((r) => ({ ... /* same as above */ }));
+
+      const fallbackWeekends: RaceWeekend[] = FALLBACK_RACES.map((r) => ({
+        round: r.round,
+        meeting: {
+          meeting_key: 0,
+          meeting_name: r.gp,
+          meeting_official_name: r.gp,
+          location: r.city,
+          country_key: 0,
+          country_code: r.country,
+          country_name: '',
+          country_flag: '',
+          circuit_key: 0,
+          circuit_short_name: r.circuit,
+          circuit_type: '',
+          circuit_info_url: '',
+          circuit_image: '',
+          gmt_offset: '',
+          date_start: r.date + 'T' + r.raceUTC + ':00Z',
+          date_end: r.date + 'T' + r.raceUTC + ':00Z',
+          year: 2026,
+          is_cancelled: false,
+        },
+        sessions: Object.entries(r.sessions).map(([key, date]) => ({
+          session_key: 0,
+          session_type: key === 'race' ? 'Race' : key === 'qualifying' ? 'Qualifying' : key.includes('sprint') ? 'Qualifying' : 'Practice',
+          session_name: key === 'fp1' ? 'Practice 1' : key === 'fp2' ? 'Practice 2' : key === 'fp3' ? 'Practice 3' : key === 'sprintQualifying' ? 'Sprint Qualifying' : key === 'sprint' ? 'Sprint' : key === 'qualifying' ? 'Qualifying' : 'Race',
+          date_start: date,
+          date_end: date,
+          meeting_key: 0,
+          circuit_key: 0,
+          circuit_short_name: r.circuit,
+          country_key: 0,
+          country_code: r.country,
+          country_name: '',
+          location: r.city,
+          gmt_offset: '',
+          year: 2026,
+          is_cancelled: false,
+        })).sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime()),
+        isSprint: !!r.sprint,
+      }));
+
       setRaceWeekends(fallbackWeekends);
       setNextRace(findNextRace(fallbackWeekends));
+      setDriverStandings(FALLBACK_DRIVERS.map(d => ({
+        position: d.position,
+        firstName: d.firstName,
+        lastName: d.lastName,
+        team: d.team,
+        teamColor: d.teamColor,
+        points: d.points,
+        wins: d.wins,
+        driverNumber: 0,
+        headshotUrl: ''
+      })));
+      setConstructorStandings(FALLBACK_CONSTRUCTORS);
       setIsUsingFallback(true);
     } finally {
       setLoading(false);
@@ -139,10 +200,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     loadData(true);
   }, [loadData]);
 
+  // Initial load
   useEffect(() => {
     loadData();
   }, [loadData]);
 
+  // Auto-refresh
   useEffect(() => {
     refreshTimerRef.current = setInterval(() => loadData(true), AUTO_REFRESH_INTERVAL);
     return () => {
