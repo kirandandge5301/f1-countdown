@@ -111,8 +111,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
           isSprint: !!r.sprint,
         }));
 
-        setRaceWeekends(fallbackWeekends);
-        setNextRace(findNextRace(fallbackWeekends));   // This should now pick Monaco correctly
+                setRaceWeekends(fallbackWeekends);
+        setNextRace(findNextRace(fallbackWeekends));   // ← Use this new line
         setIsUsingFallback(true);
       }
 
