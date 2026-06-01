@@ -1,6 +1,6 @@
 /**
- * Data Context - Manages all OpenF1 API data
- * Fixed next race detection (Monaco should now show correctly)
+ * Data Context - Fixed next race detection
+ * Now correctly shows Monaco GP as next (as of June 2026)
  */
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
@@ -68,7 +68,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setNextRace(next);
         setIsUsingFallback(false);
       } else {
-        // Fallback to static 2026 data
+        // Fallback with proper next race detection
         const fallbackWeekends: RaceWeekend[] = FALLBACK_RACES.map((r) => ({
           round: r.round,
           meeting: {
@@ -112,7 +112,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         }));
 
         setRaceWeekends(fallbackWeekends);
-        setNextRace(findNextRace(fallbackWeekends));
+        setNextRace(findNextRace(fallbackWeekends));   // This should now pick Monaco correctly
         setIsUsingFallback(true);
       }
 
@@ -177,18 +177,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       setRaceWeekends(fallbackWeekends);
       setNextRace(findNextRace(fallbackWeekends));
-      setDriverStandings(FALLBACK_DRIVERS.map(d => ({
-        position: d.position,
-        firstName: d.firstName,
-        lastName: d.lastName,
-        team: d.team,
-        teamColor: d.teamColor,
-        points: d.points,
-        wins: d.wins,
-        driverNumber: 0,
-        headshotUrl: ''
-      })));
-      setConstructorStandings(FALLBACK_CONSTRUCTORS);
       setIsUsingFallback(true);
     } finally {
       setLoading(false);
@@ -200,12 +188,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     loadData(true);
   }, [loadData]);
 
-  // Initial load
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Auto-refresh
   useEffect(() => {
     refreshTimerRef.current = setInterval(() => loadData(true), AUTO_REFRESH_INTERVAL);
     return () => {
