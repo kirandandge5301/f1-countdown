@@ -3,7 +3,7 @@ import { detectUserTimezone, getTimezoneOffsetLabel, formatTimeInZone, formatDat
 
 interface TimezoneContextType {
   timezone: string;
-  timezoneLabel: string;
+  timezoneLabel: string;        // e.g. "Mumbai (GMT+5:30)"
   setTimezone: (tz: string) => void;
   formatTime: (utcString: string) => string;
   formatDate: (utcString: string) => string;
@@ -11,7 +11,7 @@ interface TimezoneContextType {
 
 const TimezoneContext = createContext<TimezoneContextType>({
   timezone: 'Asia/Kolkata',
-  timezoneLabel: 'GMT+5:30',
+  timezoneLabel: 'Mumbai (GMT+5:30)',
   setTimezone: () => {},
   formatTime: () => '--:--',
   formatDate: () => '---'
@@ -22,15 +22,21 @@ export function TimezoneProvider({ children }: { children: ReactNode }) {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('gpcountdown-tz');
       if (saved) return saved;
-      return detectUserTimezone();
+      
+      // Auto-detect user's real local timezone
+      const detected = detectUserTimezone();
+      return detected;
     }
     return 'Asia/Kolkata';
   });
 
-  const [timezoneLabel, setTimezoneLabel] = useState<string>('GMT+5:30');
+  const [timezoneLabel, setTimezoneLabel] = useState<string>('Mumbai (GMT+5:30)');
 
   useEffect(() => {
-    setTimezoneLabel(getTimezoneOffsetLabel(timezone));
+    const label = getTimezoneOffsetLabel(timezone);
+    // Make it more user-friendly: City (GMT Offset)
+    const city = timezone.split('/').pop()?.replace(/_/g, ' ') || 'Local';
+    setTimezoneLabel(`${city} (${label})`);
   }, [timezone]);
 
   useEffect(() => {
@@ -50,7 +56,13 @@ export function TimezoneProvider({ children }: { children: ReactNode }) {
   }, [timezone]);
 
   return (
-    <TimezoneContext.Provider value={{ timezone, timezoneLabel, setTimezone, formatTime, formatDate }}>
+    <TimezoneContext.Provider value={{ 
+      timezone, 
+      timezoneLabel, 
+      setTimezone, 
+      formatTime, 
+      formatDate 
+    }}>
       {children}
     </TimezoneContext.Provider>
   );
