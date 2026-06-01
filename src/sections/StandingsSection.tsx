@@ -31,126 +31,165 @@ export default function StandingsSection() {
         </div>
 
         {/* Heading */}
-        <h2 className="text-[clamp(32px,5vw,52px)] font-semibold text-[var(--text-primary)] tracking-[-0.02em] leading-tight mb-8">
+        <h2 className="text-[clamp(36px,5vw,56px)] font-semibold text-[var(--text-primary)] tracking-[-0.02em] leading-tight mb-8">
           Championship Standings.
         </h2>
 
-        {/* Tab Control - Better on mobile */}
-        <div className="inline-flex w-full sm:w-auto gap-1 bg-[var(--bg-surface)] rounded-xl p-1 mb-8">
+        {/* Tab Control */}
+        <div className="inline-flex gap-1 bg-[var(--bg-surface)] rounded-xl p-1 mb-8">
           <button
             onClick={() => setActiveTab('drivers')}
-            className={`flex-1 sm:flex-none px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === 'drivers'
                 ? 'bg-[#E10600] text-white'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
-            Drivers
+            Drivers Championship
           </button>
           <button
             onClick={() => setActiveTab('constructors')}
-            className={`flex-1 sm:flex-none px-6 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === 'constructors'
                 ? 'bg-[#E10600] text-white'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
-            Constructors
+            Constructors Championship
           </button>
         </div>
 
         {loading ? (
-          <div className="space-y-4 py-8">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-20 rounded-2xl bg-[var(--bg-surface)] animate-pulse" />
-            ))}
-          </div>
-        ) : (
+  <div className="space-y-4 py-8">
+    {[...Array(10)].map((_, i) => (
+      <div
+        key={i}
+        className="h-16 rounded-xl bg-[var(--bg-surface)] animate-pulse"
+      />
+    ))}
+  </div>
+) : (
           <>
-            {/* DRIVERS TAB */}
+            {/* ===== DRIVERS TAB ===== */}
             {activeTab === 'drivers' && (
-              <div className="space-y-4">
-                {driverStandings.map((driver: any, i: number) => (
+              <div key="drivers" className="animate-fade-in">
+                {/* Table Header */}
+                <div className="hidden sm:grid grid-cols-[50px_1fr_80px_60px] gap-4 py-3 border-b border-[var(--border-subtle)]">
+                  <span className="text-[11px] tracking-[0.1em] text-[var(--text-tertiary)] uppercase">POS</span>
+                  <span className="text-[11px] tracking-[0.1em] text-[var(--text-tertiary)] uppercase">DRIVER</span>
+                  <span className="text-[11px] tracking-[0.1em] text-[var(--text-tertiary)] uppercase text-right">PTS</span>
+                  <span className="text-[11px] tracking-[0.1em] text-[var(--text-tertiary)] uppercase text-right">WINS</span>
+                </div>
+
+                {/* Driver Rows */}
+                {driverStandings.map((driver, i) => (
                   <div
                     key={`${driver.driverNumber}-${driver.position}`}
-                    className={`bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl p-6 transition-all hover:border-[#E10600]/30 ${
+                    className={`grid grid-cols-[auto_1fr_auto] sm:grid-cols-[50px_1fr_80px_60px] gap-2 sm:gap-4 py-4 border-b border-[var(--border-subtle)] items-center transition-colors hover:bg-[var(--row-hover)] ${
                       isVisible ? 'animate-fade-in-up' : 'opacity-0'
                     }`}
-                    style={{ animationDelay: `${i * 40}ms` }}
+                    style={{ animationDelay: `${i * 50}ms` }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <span
-                          className="font-mono text-4xl font-bold tabular-nums w-12"
-                          style={{ color: POSITION_COLORS[driver.position] || 'var(--text-primary)' }}
-                        >
-                          {driver.position}
-                        </span>
+                    {/* Position */}
+                    <span
+                      className="font-mono text-xl font-bold tabular-nums"
+                      style={{ color: POSITION_COLORS[driver.position] || 'var(--text-primary)' }}
+                    >
+                      {driver.position}
+                    </span>
 
-                        {driver.headshotUrl ? (
-                          <img
-                            src={driver.headshotUrl}
-                            alt={driver.firstName}
-                            className="w-14 h-14 rounded-full object-cover border-2 border-[var(--border-subtle)]"
-                          />
-                        ) : (
-                          <div className="w-14 h-14 rounded-full bg-zinc-800" />
-                        )}
+                    {/* Driver Name + Team */}
+<div className="flex items-center gap-3">
+  {driver.headshotUrl ? (
+    <img
+      src={driver.headshotUrl}
+      alt={`${driver.firstName} ${driver.lastName}`}
+      className="w-10 h-10 rounded-full object-cover border border-[var(--border-subtle)]"
+      loading="lazy"
+    />
+  ) : (
+    <span
+      className="w-10 h-10 rounded-full bg-[var(--bg-surface)]"
+    />
+  )}
 
-                        <div>
-                          <div className="font-semibold text-[17px] text-[var(--text-primary)]">
-                            {driver.firstName} {driver.lastName}
-                          </div>
-                          <div className="text-sm text-[var(--text-secondary)]">{driver.team}</div>
-                        </div>
-                      </div>
+  <span
+    className="w-1 h-4 rounded-full shrink-0 hidden sm:block"
+    style={{ backgroundColor: driver.teamColor }}
+  />
 
-                      <div className="text-right">
-                        <div className="font-mono text-3xl font-bold text-[var(--text-primary)] tabular-nums">
-                          {driver.points}
-                        </div>
-                        <div className="text-xs text-[var(--text-tertiary)]">PTS</div>
-                      </div>
-                    </div>
+  <div>
+    <span className="text-base font-semibold text-[var(--text-primary)] block">
+      {driver.firstName} {driver.lastName}
+    </span>
+    <span className="text-sm text-[var(--text-secondary)]">
+      {driver.team}
+    </span>
+  </div>
+</div>
+
+                    {/* Points */}
+                    <span className="font-mono text-xl font-bold text-[var(--text-primary)] text-right tabular-nums">
+                      {driver.points}
+                    </span>
+
+                    {/* Wins */}
+                    <span className="text-sm text-[var(--text-secondary)] text-right hidden sm:block">
+                      {driver.wins}
+                    </span>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* CONSTRUCTORS TAB */}
+            {/* ===== CONSTRUCTORS TAB ===== */}
             {activeTab === 'constructors' && (
-              <div className="space-y-4">
-                {constructorStandings.map((constructor: any, i: number) => (
+              <div key="constructors" className="animate-fade-in">
+                {/* Table Header */}
+                <div className="hidden sm:grid grid-cols-[50px_1fr_80px_60px] gap-4 py-3 border-b border-[var(--border-subtle)]">
+                  <span className="text-[11px] tracking-[0.1em] text-[var(--text-tertiary)] uppercase">POS</span>
+                  <span className="text-[11px] tracking-[0.1em] text-[var(--text-tertiary)] uppercase">CONSTRUCTOR</span>
+                  <span className="text-[11px] tracking-[0.1em] text-[var(--text-tertiary)] uppercase text-right">PTS</span>
+                  <span className="text-[11px] tracking-[0.1em] text-[var(--text-tertiary)] uppercase text-right">WINS</span>
+                </div>
+
+                {/* Constructor Rows */}
+                {constructorStandings.map((constructor, i) => (
                   <div
                     key={`${constructor.name}-${constructor.position}`}
-                    className={`bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl p-6 transition-all hover:border-[#E10600]/30 ${
+                    className={`grid grid-cols-[auto_1fr_auto] sm:grid-cols-[50px_1fr_80px_60px] gap-2 sm:gap-4 py-4 border-b border-[var(--border-subtle)] items-center transition-colors hover:bg-[var(--row-hover)] ${
                       isVisible ? 'animate-fade-in-up' : 'opacity-0'
                     }`}
-                    style={{ animationDelay: `${i * 40}ms` }}
+                    style={{ animationDelay: `${i * 50}ms` }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <span
-                          className="font-mono text-4xl font-bold tabular-nums w-12"
-                          style={{ color: POSITION_COLORS[constructor.position] || 'var(--text-primary)' }}
-                        >
-                          {constructor.position}
-                        </span>
+                    {/* Position */}
+                    <span
+                      className="font-mono text-xl font-bold tabular-nums"
+                      style={{ color: POSITION_COLORS[constructor.position] || 'var(--text-primary)' }}
+                    >
+                      {constructor.position}
+                    </span>
 
-                        <div>
-                          <div className="font-semibold text-[17px] text-[var(--text-primary)]">
-                            {constructor.name}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <div className="font-mono text-3xl font-bold text-[var(--text-primary)] tabular-nums">
-                          {constructor.points}
-                        </div>
-                        <div className="text-xs text-[var(--text-tertiary)]">PTS</div>
-                      </div>
+                    {/* Constructor Name + Color */}
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="w-1 h-6 rounded-full shrink-0 hidden sm:block"
+                        style={{ backgroundColor: constructor.teamColor }}
+                      />
+                      <span className="text-base font-semibold text-[var(--text-primary)]">
+                        {constructor.name}
+                      </span>
                     </div>
+
+                    {/* Points */}
+                    <span className="font-mono text-xl font-bold text-[var(--text-primary)] text-right tabular-nums">
+                      {constructor.points}
+                    </span>
+
+                    {/* Wins */}
+                    <span className="text-sm text-[var(--text-secondary)] text-right hidden sm:block">
+                      {constructor.wins}
+                    </span>
                   </div>
                 ))}
               </div>
