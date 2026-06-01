@@ -4,17 +4,19 @@ import CountdownDisplay from '@/components/CountdownDisplay';
 import SessionCard from '@/components/SessionCard';
 import { getSessionDisplayName } from '@/services/openf1';
 import type { Session } from '@/services/openf1';
-
+import { CIRCUIT_INFO } from '@/data/circuitInfo';
 export default function NextRaceSection() {
   const { timezoneLabel } = useTimezone();
   const { nextRace, loading } = useData();
-
+  
   const race = nextRace?.race;
   const nextSession = nextRace?.nextSession;
   const allSessions = nextRace?.allSessions || [];
 
   const nextSessionTime = nextSession ? new Date(nextSession.date_start) : null;
-
+  const circuitInfo = race
+  ? CIRCUIT_INFO[race.meeting.meeting_name]
+  : null;
   return (
     <section
       id="next-race"
@@ -72,9 +74,53 @@ export default function NextRaceSection() {
             </p>
 
             {/* Main Countdown */}
-            <div className="mb-16">
-              <CountdownDisplay targetTime={nextSessionTime} size="hero" />
-            </div>
+           {/* Main Countdown */}
+<div className="mb-12">
+  <CountdownDisplay targetTime={nextSessionTime} size="hero" />
+</div>
+
+{/* Circuit Information */}
+{circuitInfo && (
+  <div className="max-w-3xl mx-auto mb-16">
+    <div className="border border-[var(--border-subtle)] bg-[var(--bg-surface)] rounded-2xl p-6 md:p-8">
+      <div className="flex items-center gap-2 mb-6">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#E10600]" />
+        <span className="text-[11px] font-medium tracking-[0.2em] text-[#E10600] uppercase">
+          Circuit Information
+        </span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-6 text-center">
+        <div>
+          <p className="text-[11px] tracking-[0.15em] uppercase text-[var(--text-tertiary)] mb-2">
+            Laps
+          </p>
+          <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">
+            {circuitInfo.laps}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-[11px] tracking-[0.15em] uppercase text-[var(--text-tertiary)] mb-2">
+            Length
+          </p>
+          <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">
+            {circuitInfo.length}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-[11px] tracking-[0.15em] uppercase text-[var(--text-tertiary)] mb-2">
+            Distance
+          </p>
+          <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">
+            {circuitInfo.distance}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
             {/* Session Cards */}
             <div className="max-w-[800px] mx-auto space-y-3">
