@@ -3,16 +3,7 @@ import { RACES as FALLBACK_RACES } from '@/data/races';
 import { DRIVERS_STANDINGS as FALLBACK_DRIVERS, CONSTRUCTORS_STANDINGS as FALLBACK_CONSTRUCTORS } from '@/data/standings';
 import { findNextRace } from '@/services/openf1';
 
-interface DataContextType {
-  raceWeekends: any[];
-  nextRace: any;
-  driverStandings: any[];
-  constructorStandings: any[];
-  loading: boolean;
-  refresh: () => void;
-}
-
-const DataContext = createContext<DataContextType>({
+const DataContext = createContext<any>({
   raceWeekends: [],
   nextRace: null,
   driverStandings: [],
