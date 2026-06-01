@@ -174,6 +174,7 @@ Track every F1 session live at gpcountdown.com
               No upcoming races found.
             </p>
           </div>
+        )}
       </div>
     </section>
   );
