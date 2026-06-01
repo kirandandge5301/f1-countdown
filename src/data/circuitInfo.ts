@@ -2,7 +2,7 @@ export interface CircuitInfo {
   laps: number;
   length: string;
   distance: string;
-  fact: string;
+  fact?: string;
 }
 
 export const CIRCUIT_INFO: Record<string, CircuitInfo> = {
