@@ -96,7 +96,7 @@ export default function Header() {
 
           {/* Right Side */}
           <div className="flex items-center gap-3">
-            {/* Timezone Selector - Improved */}
+            {/* Timezone Selector */}
             <div ref={tzRef} className="relative">
               <button
                 onClick={() => setTzOpen(!tzOpen)}
@@ -154,7 +154,7 @@ export default function Header() {
             <X size={28} />
           </button>
           <nav className="flex flex-col items-center gap-10 text-2xl">
-            {NAV_LINKS.map((link, i) => (
+            {NAV_LINKS.map(link => (
               <button
                 key={link.href}
                 onClick={() => handleNavClick(link.href)}
