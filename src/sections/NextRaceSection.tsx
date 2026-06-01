@@ -85,7 +85,7 @@ Track every F1 session live at gpcountdown.com
     </div>
   </div>
 ) : race ? (
-          <>
+          <div>
             {/* Top row: label + round badge */}
             <div className="flex items-start justify-between mb-8">
               <div className="flex items-center gap-2">
@@ -110,8 +110,7 @@ Track every F1 session live at gpcountdown.com
 <p className="text-lg md:text-xl font-medium text-[var(--text-secondary)] mb-8 md:mb-10">
   The roar is coming.
 </p>
-  The roar is coming.
-</p>
+  
             {/* Main Countdown */}
            {/* Main Countdown */}
 <div className="mb-16">
