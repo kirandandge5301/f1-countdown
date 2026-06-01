@@ -15,8 +15,8 @@ const DataContext = createContext<any>({
 export function DataProvider({ children }: { children: ReactNode }) {
   const [raceWeekends, setRaceWeekends] = useState<any[]>([]);
   const [nextRace, setNextRace] = useState<any>(null);
-  const [driverStandings] = useState(...)
-const [constructorStandings] = useState(...)
+  const [driverStandings] = useState<any[]>(FALLBACK_DRIVERS);
+const [constructorStandings] = useState<any[]>(FALLBACK_CONSTRUCTORS);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(() => {
