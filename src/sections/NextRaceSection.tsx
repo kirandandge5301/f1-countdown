@@ -45,10 +45,17 @@ export default function NextRaceSection() {
       {/* Content */}
       <div className="relative z-10 max-w-6xl mx-auto w-full">
         {loading ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-[var(--text-secondary)] text-sm animate-pulse">Loading race data...</div>
-          </div>
-        ) : race ? (
+  <div className="animate-pulse space-y-8">
+    <div className="h-12 w-64 bg-[var(--bg-surface)] rounded-xl" />
+    <div className="h-6 w-40 bg-[var(--bg-surface)] rounded-lg" />
+    <div className="h-32 bg-[var(--bg-surface)] rounded-2xl" />
+    <div className="space-y-3">
+      <div className="h-14 bg-[var(--bg-surface)] rounded-xl" />
+      <div className="h-14 bg-[var(--bg-surface)] rounded-xl" />
+      <div className="h-14 bg-[var(--bg-surface)] rounded-xl" />
+    </div>
+  </div>
+) : race ? (
           <>
             {/* Top row: label + round badge */}
             <div className="flex items-start justify-between mb-8">
