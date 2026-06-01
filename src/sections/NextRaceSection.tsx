@@ -105,7 +105,7 @@ Track every F1 session live at gpcountdown.com
 
             
             
-<p className="text-lg italic text-[var(--text-tertiary)] mb-10">
+<p className="text-2xl font-semibold text-[var(--text-primary)] mb-10">
   The roar is coming.
 </p>
             {/* Main Countdown */}
