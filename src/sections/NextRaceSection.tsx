@@ -144,12 +144,12 @@ Track every F1 session live at gpcountdown.com
     </p>
 
     <p className="text-[var(--text-secondary)] leading-relaxed max-w-2xl mx-auto">
-      {circuitInfo.fact}
-    </p>
-  </div>
+  {circuitInfo.fact}
+</p>
+</div>
 )}
-  </div>
-  {/* Session Cards */}
+
+{/* Session Cards */}
 <div className="max-w-[800px] mx-auto space-y-3">
   {allSessions.map((session: Session, i: number) => (
     <SessionCard
@@ -174,7 +174,6 @@ Track every F1 session live at gpcountdown.com
               No upcoming races found.
             </p>
           </div>
-        )}
       </div>
     </section>
   );
