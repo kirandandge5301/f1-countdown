@@ -14,31 +14,7 @@ export default function NextRaceSection() {
   const allSessions = nextRace?.allSessions || [];
 
   const nextSessionTime = nextSession ? new Date(nextSession.date_start) : null;
-  const countryFlags: Record<string, string> = {
-  MC: '🇲🇨',
-  GB: '🇬🇧',
-  IT: '🇮🇹',
-  BE: '🇧🇪',
-  NL: '🇳🇱',
-  ES: '🇪🇸',
-  CA: '🇨🇦',
-  AU: '🇦🇺',
-  JP: '🇯🇵',
-  SG: '🇸🇬',
-  US: '🇺🇸',
-  MX: '🇲🇽',
-  BR: '🇧🇷',
-  AT: '🇦🇹',
-  HU: '🇭🇺',
-  AZ: '🇦🇿',
-  QA: '🇶🇦',
-  AE: '🇦🇪',
-  SA: '🇸🇦',
-  CN: '🇨🇳',
-  BH: '🇧🇭'
-};
-
-const flag = countryFlags[race?.meeting.country_code || ''] || '🏁';
+  
   const circuitInfo = race
   ? CIRCUIT_INFO[race.meeting.meeting_name]
   : null;
@@ -125,7 +101,7 @@ Track every F1 session live at gpcountdown.com
 
             {/* Race name */}
             <h1 className="text-[clamp(36px,5vw,64px)] font-semibold text-[var(--text-primary)] tracking-[-0.02em] leading-tight mb-2">
-             {flag} {race.meeting.meeting_name}
+             {race.meeting.meeting_name}
             </h1>
 
             
