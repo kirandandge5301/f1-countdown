@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { findNextRace } from '@/services/openf1';
 import { RACES as FALLBACK_RACES } from '@/data/races';
 import { DRIVERS_STANDINGS as FALLBACK_DRIVERS, CONSTRUCTORS_STANDINGS as FALLBACK_CONSTRUCTORS } from '@/data/standings';
+import { findNextRace } from '@/services/openf1';
 
 interface DataContextType {
   raceWeekends: any[];
@@ -28,10 +28,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [constructorStandings, setConstructorStandings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(() => {
     setLoading(true);
 
-    // Use fallback data (stable for now)
+    // Create fallback weekends
     const fallbackWeekends = FALLBACK_RACES.map((r: any) => ({
       round: r.round,
       meeting: {
@@ -39,8 +39,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         circuit_short_name: r.circuit,
         country_code: r.country,
       },
-      sessions: Object.entries(r.sessions).map(([key, date]: any) => ({
-        session_key: 0,
+      sessions: Object.entries(r.sessions || {}).map(([key, date]: any) => ({
+        session_key: Date.now(),
         session_type: key,
         date_start: date,
       })),
@@ -50,12 +50,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setRaceWeekends(fallbackWeekends);
     setNextRace(findNextRace(fallbackWeekends));
 
-    setDriverStandings(FALLBACK_DRIVERS.map((d: any) => ({
-      ...d,
-      driverNumber: 0,
-      headshotUrl: ''
-    })));
-
+    setDriverStandings(FALLBACK_DRIVERS);
     setConstructorStandings(FALLBACK_CONSTRUCTORS);
     setLoading(false);
   }, []);
