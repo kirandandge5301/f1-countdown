@@ -128,14 +128,14 @@ Track every F1 session live at gpcountdown.com
 {/* Circuit Information */}
 {circuitInfo && (
   <div className="max-w-3xl mx-auto mb-16 text-center">
-   <div className="flex items-center justify-center gap-2 mb-3">
-  <span className="w-1.5 h-1.5 rounded-full bg-[#E10600]" />
-  <span className="text-[11px] font-medium tracking-[0.2em] text-[#E10600] uppercase">
-    Circuit Guide
-  </span>
-</div>
+    <div className="flex items-center justify-center gap-2 mb-3">
+      <span className="w-1.5 h-1.5 rounded-full bg-[#E10600]" />
+      <span className="text-[11px] font-medium tracking-[0.2em] text-[#E10600] uppercase">
+        Circuit Guide
+      </span>
+    </div>
 
-<h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">
+    <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">
       {race.meeting.circuit_short_name}
     </h3>
 
@@ -146,6 +146,8 @@ Track every F1 session live at gpcountdown.com
     <p className="text-[var(--text-secondary)] leading-relaxed max-w-2xl mx-auto">
       {circuitInfo.fact}
     </p>
+  </div>
+)}
   </div>
   {/* Session Cards */}
 <div className="max-w-[800px] mx-auto space-y-3">
@@ -177,4 +179,4 @@ Track every F1 session live at gpcountdown.com
     </section>
   );
 }
-)}  
+  
