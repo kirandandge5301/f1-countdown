@@ -102,8 +102,10 @@ Track every F1 session live at gpcountdown.com
             {/* Race name */}
             <h1 className="text-[clamp(36px,5vw,64px)] font-semibold text-[var(--text-primary)] tracking-[-0.02em] leading-tight mb-2">
              {race.meeting.meeting_name}
+              
             </h1>
-
+<p>{race.meeting.circuit_short_name}</p>
+<p>{race.meeting.location}</p>
             
             
 <p className="text-2xl font-semibold text-[var(--text-primary)] mb-10">
@@ -126,72 +128,17 @@ Track every F1 session live at gpcountdown.com
 
 {/* Circuit Information */}
 {circuitInfo && (
-  <div className="max-w-3xl mx-auto mb-16">
-    <div className="border border-[var(--border-subtle)] bg-[var(--bg-surface)] rounded-2xl p-6 md:p-8">
-      <div className="flex items-center gap-2 mb-6">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#E10600]" />
-        <span className="text-[11px] font-medium tracking-[0.2em] text-[#E10600] uppercase">
-          Circuit Information
-        </span>
-      </div>
+  <div className="max-w-3xl mx-auto mb-16 text-center">
+    <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-3">
+      {race.meeting.circuit_short_name}
+    </h3>
 
-      <div className="grid grid-cols-3 gap-6 text-center">
-        <div>
-          <p className="text-[11px] tracking-[0.15em] uppercase text-[var(--text-tertiary)] mb-2">
-            Laps
-          </p>
-          <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">
-            {circuitInfo.laps}
-          </p>
-        </div>
+    <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-tertiary)] mb-4">
+      {circuitInfo.laps} LAPS • {circuitInfo.length} • {circuitInfo.distance}
+    </p>
 
-        <div>
-          <p className="text-[11px] tracking-[0.15em] uppercase text-[var(--text-tertiary)] mb-2">
-            Length
-          </p>
-          <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">
-            {circuitInfo.length}
-          </p>
-        </div>
-
-        <div>
-          <p className="text-[11px] tracking-[0.15em] uppercase text-[var(--text-tertiary)] mb-2">
-            Distance
-          </p>
-          <p className="font-mono text-2xl font-bold text-[var(--text-primary)]">
-            {circuitInfo.distance}
-          </p>
-        </div>
-      </div>
-    </div>
+    <p className="text-[var(--text-secondary)] leading-relaxed max-w-2xl mx-auto">
+      {circuitInfo.fact}
+    </p>
   </div>
-)}
-
-            {/* Session Cards */}
-            <div className="max-w-[800px] mx-auto space-y-3">
-              {allSessions.map((session: Session, i: number) => (
-                <SessionCard
-                  key={session.session_key || i}
-                  sessionLabel={getSessionDisplayName(session)}
-                  sessionTime={session.date_start}
-                  isActive={nextSession?.session_key === session.session_key}
-                  hasSprint={race.isSprint}
-                  delay={100 * i}
-                />
-              ))}
-            </div>
-
-            {/* Timezone note */}
-            <p className="text-center text-sm text-[var(--text-tertiary)] mt-8">
-              All times shown in {timezoneLabel}
-            </p>
-          </>
-        ) : (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <p className="text-[var(--text-secondary)]">No upcoming races found.</p>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
+)}  
