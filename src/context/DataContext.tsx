@@ -24,14 +24,13 @@ const DataContext = createContext<DataContextType>({
 export function DataProvider({ children }: { children: ReactNode }) {
   const [raceWeekends, setRaceWeekends] = useState<any[]>([]);
   const [nextRace, setNextRace] = useState<any>(null);
-  const [driverStandings, setDriverStandings] = useState<any[]>([]);
-  const [constructorStandings, setConstructorStandings] = useState<any[]>([]);
+  const [driverStandings, setDriverStandings] = useState<any[]>(FALLBACK_DRIVERS);
+  const [constructorStandings, setConstructorStandings] = useState<any[]>(FALLBACK_CONSTRUCTORS);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(() => {
     setLoading(true);
 
-    // Create fallback weekends
     const fallbackWeekends = FALLBACK_RACES.map((r: any) => ({
       round: r.round,
       meeting: {
@@ -50,8 +49,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setRaceWeekends(fallbackWeekends);
     setNextRace(findNextRace(fallbackWeekends));
 
-    setDriverStandings(FALLBACK_DRIVERS);
-    setConstructorStandings(FALLBACK_CONSTRUCTORS);
     setLoading(false);
   }, []);
 
