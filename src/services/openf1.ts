@@ -363,6 +363,7 @@ export interface EnrichedDriverStanding {
   points: number;
   wins: number;
   driverNumber: number;
+  headshotUrl: string;
 }
 
 export interface EnrichedConstructorStanding {
@@ -381,34 +382,39 @@ export async function fetchEnrichedDriverStandings(): Promise<EnrichedDriverStan
 
   if (!champEntries || champEntries.length === 0) {
     // Return fallback
-    return FALLBACK_DRIVERS.map(d => ({
-      position: d.position,
-      firstName: d.firstName,
-      lastName: d.lastName,
-      team: d.team,
-      teamColor: d.teamColor,
-      points: d.points,
-      wins: d.wins,
-      driverNumber: 0
-    }));
+   return FALLBACK_DRIVERS.map(d => ({
+  position: d.position,
+  firstName: d.firstName,
+  lastName: d.lastName,
+  team: d.team,
+  teamColor: d.teamColor,
+  points: d.points,
+  wins: d.wins,
+  driverNumber: 0,
+  headshotUrl: ''
+}));
   }
 
   // Sort by position
   const sorted = [...champEntries].sort((a, b) => a.position_current - b.position_current);
 
   return sorted.map(entry => {
-    const info = driverInfos.find(d => d.driver_number === entry.driver_number);
-    return {
-      position: entry.position_current,
-      firstName: info?.first_name || `Driver`,
-      lastName: info?.last_name || `#${entry.driver_number}`,
-      team: info?.team_name || 'Unknown',
-      teamColor: info?.team_colour || '#999999',
-      points: Math.round(entry.points_current),
-      wins: 0, // OpenF1 doesn't provide win counts directly
-      driverNumber: entry.driver_number
-    };
-  });
+  const info = driverInfos.find(
+    d => d.driver_number === entry.driver_number
+  );
+
+  return {
+    position: entry.position_current,
+    firstName: info?.first_name || 'Driver',
+    lastName: info?.last_name || `#${entry.driver_number}`,
+    team: info?.team_name || 'Unknown',
+    teamColor: info?.team_colour || '#999999',
+    points: Math.round(entry.points_current),
+    wins: 0,
+    driverNumber: entry.driver_number,
+    headshotUrl: info?.headshot_url || ''
+  };
+});
 }
 
 export async function fetchEnrichedConstructorStandings(): Promise<EnrichedConstructorStanding[]> {
@@ -436,7 +442,7 @@ export async function fetchEnrichedConstructorStandings(): Promise<EnrichedConst
   };
 
   return sorted.map(entry => ({
-    position: entry.position_current,
+    
     name: entry.team_name,
     teamColor: teamColorMap[entry.team_name] || '#999999',
     points: Math.round(entry.points_current),
