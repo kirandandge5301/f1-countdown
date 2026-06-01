@@ -104,8 +104,7 @@ Track every F1 session live at gpcountdown.com
              {race.meeting.meeting_name}
               
             </h1>
-<p>{race.meeting.circuit_short_name}</p>
-<p>{race.meeting.location}</p>
+
             
             
 <p className="text-2xl font-semibold text-[var(--text-primary)] mb-10">
@@ -148,4 +147,34 @@ Track every F1 session live at gpcountdown.com
       {circuitInfo.fact}
     </p>
   </div>
+  {/* Session Cards */}
+<div className="max-w-[800px] mx-auto space-y-3">
+  {allSessions.map((session: Session, i: number) => (
+    <SessionCard
+      key={session.session_key || i}
+      sessionLabel={getSessionDisplayName(session)}
+      sessionTime={session.date_start}
+      isActive={nextSession?.session_key === session.session_key}
+      hasSprint={race.isSprint}
+      delay={100 * i}
+    />
+  ))}
+</div>
+
+<p className="text-center text-sm text-[var(--text-tertiary)] mt-8">
+  All times shown in {timezoneLabel}
+</p>
+
+          </>
+        ) : (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <p className="text-[var(--text-secondary)]">
+              No upcoming races found.
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
 )}  
