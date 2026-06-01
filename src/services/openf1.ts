@@ -442,12 +442,12 @@ export async function fetchEnrichedConstructorStandings(): Promise<EnrichedConst
   };
 
   return sorted.map(entry => ({
-    
-    name: entry.team_name,
-    teamColor: teamColorMap[entry.team_name] || '#999999',
-    points: Math.round(entry.points_current),
-    wins: 0
-  }));
+  position: entry.position_current,
+  name: entry.team_name,
+  teamColor: teamColorMap[entry.team_name] || '#999999',
+  points: Math.round(entry.points_current),
+  wins: 0
+}));
 }
 
 // ======= FORCE REFRESH =======
