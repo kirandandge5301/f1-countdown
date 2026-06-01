@@ -99,20 +99,34 @@ export default function StandingsSection() {
                     </span>
 
                     {/* Driver Name + Team */}
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="w-1 h-4 rounded-full shrink-0 hidden sm:block"
-                        style={{ backgroundColor: driver.teamColor }}
-                      />
-                      <div>
-                        <span className="text-base font-semibold text-[var(--text-primary)] block">
-                          {driver.firstName} {driver.lastName}
-                        </span>
-                        <span className="text-sm text-[var(--text-secondary)]">
-                          {driver.team}
-                        </span>
-                      </div>
-                    </div>
+<div className="flex items-center gap-3">
+  {driver.headshotUrl ? (
+    <img
+      src={driver.headshotUrl}
+      alt={`${driver.firstName} ${driver.lastName}`}
+      className="w-10 h-10 rounded-full object-cover border border-[var(--border-subtle)]"
+      loading="lazy"
+    />
+  ) : (
+    <span
+      className="w-10 h-10 rounded-full bg-[var(--bg-surface)]"
+    />
+  )}
+
+  <span
+    className="w-1 h-4 rounded-full shrink-0 hidden sm:block"
+    style={{ backgroundColor: driver.teamColor }}
+  />
+
+  <div>
+    <span className="text-base font-semibold text-[var(--text-primary)] block">
+      {driver.firstName} {driver.lastName}
+    </span>
+    <span className="text-sm text-[var(--text-secondary)]">
+      {driver.team}
+    </span>
+  </div>
+</div>
 
                     {/* Points */}
                     <span className="font-mono text-xl font-bold text-[var(--text-primary)] text-right tabular-nums">
