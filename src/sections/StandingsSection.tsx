@@ -60,10 +60,15 @@ export default function StandingsSection() {
         </div>
 
         {loading ? (
-          <div className="py-16 text-center">
-            <div className="text-[var(--text-secondary)] text-sm animate-pulse">Loading standings...</div>
-          </div>
-        ) : (
+  <div className="space-y-4 py-8">
+    {[...Array(10)].map((_, i) => (
+      <div
+        key={i}
+        className="h-16 rounded-xl bg-[var(--bg-surface)] animate-pulse"
+      />
+    ))}
+  </div>
+) : (
           <>
             {/* ===== DRIVERS TAB ===== */}
             {activeTab === 'drivers' && (
