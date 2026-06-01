@@ -19,14 +19,16 @@ export default function SessionCard({ sessionLabel, sessionTime, isActive, hasSp
   if (isActive) {
     return (
       <div
-        className="bg-white text-[#111111] rounded-2xl px-6 py-5 flex items-center justify-between animate-fade-in-up"
+  className="bg-white text-[#111111] rounded-2xl px-4 md:px-6 py-4 md:py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 animate-fade-in-up"
         style={{ animationDelay: `${delay}ms` }}
       >
         <div className="flex items-center gap-3">
           <span className="bg-[#111] text-white text-[10px] font-semibold px-2 py-0.5 rounded">
             NEXT
           </span>
-          <span className="font-semibold text-base">{sessionLabel}</span>
+          <span className="font-semibold text-base leading-tight">
+  {sessionLabel}
+</span>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-sm text-[#666]">{dateStr} &middot; {timeStr}</span>
