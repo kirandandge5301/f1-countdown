@@ -235,9 +235,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setRaceWeekends(fallbackWeekends);
       setNextRace(buildFallbackNextRace());
       setDriverStandings(FALLBACK_DRIVERS.map(d => ({
-        position: d.position, firstName: d.firstName, lastName: d.lastName,
-        team: d.team, teamColor: d.teamColor, points: d.points, wins: d.wins, driverNumber: 0
-      })));
+  position: d.position,
+  firstName: d.firstName,
+  lastName: d.lastName,
+  team: d.team,
+  teamColor: d.teamColor,
+  points: d.points,
+  wins: d.wins,
+  driverNumber: 0,
+  headshotUrl: ''
+})));
       setConstructorStandings(FALLBACK_CONSTRUCTORS);
       setIsUsingFallback(true);
     } finally {
