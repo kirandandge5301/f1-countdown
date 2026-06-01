@@ -17,6 +17,34 @@ export default function NextRaceSection() {
   const circuitInfo = race
   ? CIRCUIT_INFO[race.meeting.meeting_name]
   : null;
+  const shareOnX = () => {
+  if (!race || !nextSessionTime) return;
+
+  const diff = nextSessionTime.getTime() - Date.now();
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor(
+    (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+  );
+
+  const raceName = race.meeting.meeting_name;
+
+  const hashtag =
+    raceName
+      .replace('Grand Prix', 'GP')
+      .replace(/\s+/g, '') || 'F1';
+
+  const tweet = `🏁 ${raceName} in ${days} days ${hours} hours.
+
+Track every F1 session live at gpcountdown.com
+
+#F1 #${hashtag}`;
+
+  window.open(
+    `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`,
+    '_blank'
+  );
+};
   return (
     <section
       id="next-race"
@@ -82,8 +110,17 @@ export default function NextRaceSection() {
 
             {/* Main Countdown */}
            {/* Main Countdown */}
-<div className="mb-12">
+<div className="mb-16">
   <CountdownDisplay targetTime={nextSessionTime} size="hero" />
+
+  <div className="flex justify-center mt-8">
+    <button
+      onClick={shareOnX}
+      className="px-6 py-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] text-sm font-medium hover:scale-[1.02] transition-all duration-200"
+    >
+      🏁 Share Countdown on X
+    </button>
+  </div>
 </div>
 
 {/* Circuit Information */}
