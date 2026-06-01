@@ -38,7 +38,7 @@ const [constructorStandings] = useState(...)
     }));
 
     setRaceWeekends(fallbackWeekends);
-    setNextRace(findNextRace(fallbackWeekends));
+    setNextRace(findNextRace(fallbackWeekends as any));
 
     setLoading(false);
   }, []);
