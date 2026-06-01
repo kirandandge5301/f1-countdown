@@ -44,10 +44,15 @@ export default function ScheduleSection() {
 
         {/* Loading state */}
         {loading ? (
-          <div className="py-16 text-center">
-            <div className="text-[var(--text-secondary)] text-sm animate-pulse">Loading calendar...</div>
-          </div>
-        ) : (
+  <div className="space-y-3">
+    {[...Array(10)].map((_, i) => (
+      <div
+        key={i}
+        className="h-16 rounded-xl bg-[var(--bg-surface)] animate-pulse"
+      />
+    ))}
+  </div>
+) : (
           <>
             {/* Table Header */}
             <div className="hidden md:grid grid-cols-[60px_120px_50px_1fr_140px] gap-4 py-3 border-b border-[var(--border-subtle)]">
