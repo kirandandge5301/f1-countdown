@@ -21,12 +21,12 @@ export default function CountdownDisplay({ targetTime, size = 'hero', showLabels
     );
   }
 
-  const digitClass = "font-mono text-[clamp(60px,12vw,160px)] font-light text-[var(--text-hero-countdown)] tracking-[-0.04em] leading-none tabular-nums";
+  const digitClass = "font-mono text-[clamp(48px,8vw,110px)] font-light text-[var(--text-hero-countdown)] tracking-[-0.04em] leading-none tabular-nums";
   const separatorClass = "font-mono text-[clamp(40px,8vw,100px)] font-light text-[var(--text-tertiary)] opacity-50 self-start pt-[clamp(8px,1.5vw,16px)]";
   const labelClass = "text-xs tracking-[0.15em] text-[var(--text-tertiary)] uppercase text-center mt-2";
 
   return (
-    <div className="flex flex-wrap justify-center items-start gap-x-[clamp(16px,4vw,64px)] md:flex-nowrap">
+    <div className="flex flex-wrap justify-center items-start gap-x-[clamp(12px,2vw,32px)] md:flex-nowrap">
       {/* DAYS */}
       <div className="flex flex-col items-center">
         <span className={digitClass}>{pad(days)}</span>
