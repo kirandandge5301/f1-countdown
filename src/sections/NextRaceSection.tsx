@@ -107,7 +107,9 @@ Track every F1 session live at gpcountdown.com
             <p className="text-base text-[var(--text-secondary)] mb-12">
               {race.meeting.circuit_short_name} &middot; {race.meeting.location}, {race.meeting.country_code}
             </p>
-
+<p className="text-lg italic text-[var(--text-tertiary)] mb-10">
+  The roar is coming.
+</p>
             {/* Main Countdown */}
            {/* Main Countdown */}
 <div className="mb-16">
