@@ -42,10 +42,10 @@ export default function SessionCard({ sessionLabel, sessionTime, isActive, hasSp
 
   return (
     <div
-      className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl px-6 py-5 flex items-center justify-between transition-colors duration-200 hover:bg-[var(--bg-surface-hover)] animate-fade-in-up"
+  className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl px-4 md:px-6 py-4 md:py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-2 transition-colors duration-200 hover:bg-[var(--bg-surface-hover)] animate-fade-in-up"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
         <span className="font-semibold text-base text-[var(--text-primary)]">{sessionLabel}</span>
         {hasSprint && sessionLabel === 'Sprint' && (
           <span className="bg-[#E10600] text-white text-[10px] font-medium px-2 py-0.5 rounded">
@@ -54,7 +54,7 @@ export default function SessionCard({ sessionLabel, sessionTime, isActive, hasSp
         )}
       </div>
       <div className="flex items-center gap-4">
-        <span className="text-sm text-[var(--text-secondary)]">{dateStr} &middot; {timeStr}</span>
+        <span className="text-sm text-[var(--text-secondary)] break-words">{dateStr} &middot; {timeStr}</span>
         {!isExpired && (
           <span className="font-mono text-sm text-[var(--text-secondary)] tabular-nums hidden sm:inline">
             {String(days).padStart(2, '0')}d : {String(hours).padStart(2, '0')}h : {String(minutes).padStart(2, '0')}m : {String(seconds).padStart(2, '0')}s
