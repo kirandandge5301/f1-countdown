@@ -107,7 +107,9 @@ Track every F1 session live at gpcountdown.com
 
             
             
-<p className="text-lg md:text-2xl font-semibold text-[var(--text-primary)] mb-8 md:mb-10 text-center">
+<p className="text-lg md:text-xl font-medium text-[var(--text-secondary)] mb-8 md:mb-10">
+  The roar is coming.
+</p>
   The roar is coming.
 </p>
             {/* Main Countdown */}
@@ -127,7 +129,7 @@ Track every F1 session live at gpcountdown.com
 
 {/* Circuit Information */}
 {circuitInfo && (
-  <div className="max-w-3xl mx-auto mb-16 text-center">
+  <div className="max-w-3xl mx-auto mb-10 text-center">
     <div className="flex items-center justify-center gap-2 mb-3">
       <span className="w-1.5 h-1.5 rounded-full bg-[#E10600]" />
       <span className="text-[11px] font-medium tracking-[0.2em] text-[#E10600] uppercase">
