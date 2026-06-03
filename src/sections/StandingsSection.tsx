@@ -69,8 +69,8 @@ export default function StandingsSection() {
           <>
             {/* DRIVERS TAB */}
             {activeTab === 'drivers' && (
-              <div className="space-y-4">
-                {driverStandings.map((driver, i) => (
+  <div className="space-y-4">
+    {driverStandings.map((driver: any, i: number) => (
                   <div
                     key={`${driver.driverNumber}-${driver.position}`}
                     className={`bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl p-6 transition-all hover:border-[#E10600]/30 ${
@@ -119,8 +119,8 @@ export default function StandingsSection() {
 
             {/* CONSTRUCTORS TAB */}
             {activeTab === 'constructors' && (
-              <div className="space-y-4">
-                {constructorStandings.map((constructor, i) => (
+  <div className="space-y-4">
+    {constructorStandings.map((constructor: any, i: number) => (
                   <div
                     key={`${constructor.name}-${constructor.position}`}
                     className={`bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl p-6 transition-all hover:border-[#E10600]/30 ${
