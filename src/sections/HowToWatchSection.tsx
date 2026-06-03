@@ -43,12 +43,14 @@ export default function HowToWatchSection() {
             badge="WORLDWIDE \u00b7 OFFICIAL"
             title="F1 TV Pro."
             description="The official Formula 1 streaming service. Every practice, qualifying, sprint and race &mdash; plus team radio, onboard cameras and live timing."
+            href="https://f1tv.formula1.com/"
           />
           <BroadcastCard
             variant="dark"
             badge="UNITED KINGDOM \u00b7 IRELAND"
             title="Sky Sports F1."
             description="The home of Formula 1 in the UK with full race weekend coverage."
+            href="https://www.skysports.com/f1"
           />
         </div>
 
@@ -81,12 +83,14 @@ export default function HowToWatchSection() {
               badge={primary.region}
               title={primary.name + '.'}
               description={primary.description}
+              href={primary.href}
             />
             <BroadcastCard
               variant={secondary.variant}
               badge={secondary.region}
               title={secondary.name + '.'}
               description={secondary.description}
+              href={secondary.href}
             />
           </div>
         )}

@@ -1,7 +1,9 @@
 import { useTimezone } from '@/context/TimezoneContext';
 import { useData } from '@/context/DataContext';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import CountdownDisplay from '@/components/CountdownDisplay';
 import SessionCard from '@/components/SessionCard';
+import RaceInsight from '@/components/RaceInsight';
 import { getSessionDisplayName } from '@/services/openf1';
 import type { Session } from '@/services/openf1';
 import { CIRCUIT_INFO } from '@/data/circuitInfo';
@@ -9,6 +11,7 @@ import { CIRCUIT_INFO } from '@/data/circuitInfo';
 export default function NextRaceSection() {
   const { timezoneLabel } = useTimezone();
   const { nextRace, loading } = useData();
+  const [sectionRef, isVisible] = useIntersectionObserver<HTMLDivElement>({ threshold: 0.1 });
 
   const race = nextRace?.race;
   const nextSession = nextRace?.nextSession;
@@ -31,6 +34,7 @@ export default function NextRaceSection() {
 
   return (
     <section
+      ref={sectionRef}
       id="next-race"
       className="relative min-h-screen flex flex-col justify-center px-[clamp(20px,5vw,64px)] py-[clamp(60px,10vh,120px)] overflow-hidden"
     >
@@ -105,6 +109,11 @@ export default function NextRaceSection() {
                 </p>
               </div>
             )}
+
+            {/* Race Insights */}
+            <div className="max-w-4xl mx-auto mb-12 px-2">
+              <RaceInsight race={race} isVisible={isVisible} />
+            </div>
 
             {/* Session Cards */}
             <div className="max-w-[800px] mx-auto space-y-3 px-2">

@@ -1,9 +1,10 @@
-export interface Broadcaster {
+﻿export interface Broadcaster {
   name: string;
   description: string;
   region: string;
   variant: 'red' | 'dark';
   icon: 'globe' | 'tv';
+  href: string;
 }
 
 export interface CountryBroadcasters {
@@ -18,14 +19,16 @@ export const BROADCASTERS: Record<string, CountryBroadcasters> = {
       description: 'The official Formula 1 streaming service. Every practice, qualifying, sprint and race — plus team radio, onboard cameras and live timing.',
       region: 'WORLDWIDE \u00b7 OFFICIAL',
       variant: 'red',
-      icon: 'globe'
+      icon: 'globe',
+      href: 'https://f1tv.formula1.com/'
     },
     secondary: {
       name: 'Disney+ Hotstar',
       description: 'Live streaming of all F1 sessions in India with Hindi and English commentary.',
       region: 'INDIA',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.hotstar.com/in/sports'
     }
   },
   GB: {
@@ -34,14 +37,16 @@ export const BROADCASTERS: Record<string, CountryBroadcasters> = {
       description: 'The home of Formula 1 in the UK with full race weekend coverage.',
       region: 'UNITED KINGDOM \u00b7 IRELAND',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.skysports.com/f1'
     },
     secondary: {
       name: 'F1 TV Pro',
       description: 'The official Formula 1 streaming service. Every practice, qualifying, sprint and race — plus team radio, onboard cameras and live timing.',
       region: 'WORLDWIDE \u00b7 OFFICIAL',
       variant: 'red',
-      icon: 'globe'
+      icon: 'globe',
+      href: 'https://f1tv.formula1.com/'
     }
   },
   US: {
@@ -50,14 +55,16 @@ export const BROADCASTERS: Record<string, CountryBroadcasters> = {
       description: 'Free-to-air broadcast of all F1 races with expert commentary and analysis.',
       region: 'UNITED STATES',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.espn.com/f1/'
     },
     secondary: {
       name: 'F1 TV Pro',
       description: 'The official Formula 1 streaming service. Every practice, qualifying, sprint and race.',
       region: 'WORLDWIDE \u00b7 OFFICIAL',
       variant: 'red',
-      icon: 'globe'
+      icon: 'globe',
+      href: 'https://f1tv.formula1.com/'
     }
   },
   FR: {
@@ -66,14 +73,16 @@ export const BROADCASTERS: Record<string, CountryBroadcasters> = {
       description: 'Full coverage of the F1 season with French commentary and exclusive content.',
       region: 'FRANCE',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.canalplus.com/'
     },
     secondary: {
       name: 'F1 TV Pro',
       description: 'The official Formula 1 streaming service. Every practice, qualifying, sprint and race.',
       region: 'WORLDWIDE \u00b7 OFFICIAL',
       variant: 'red',
-      icon: 'globe'
+      icon: 'globe',
+      href: 'https://f1tv.formula1.com/'
     }
   },
   DE: {
@@ -82,14 +91,16 @@ export const BROADCASTERS: Record<string, CountryBroadcasters> = {
       description: 'Comprehensive F1 coverage in Germany with expert analysis and German commentary.',
       region: 'GERMANY',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.sky.de/sport/formel-1'
     },
     secondary: {
       name: 'F1 TV Pro',
       description: 'The official Formula 1 streaming service. Every practice, qualifying, sprint and race.',
       region: 'WORLDWIDE \u00b7 OFFICIAL',
       variant: 'red',
-      icon: 'globe'
+      icon: 'globe',
+      href: 'https://f1tv.formula1.com/'
     }
   },
   AU: {
@@ -98,14 +109,16 @@ export const BROADCASTERS: Record<string, CountryBroadcasters> = {
       description: 'Full F1 race weekend coverage across Australia with local commentary team.',
       region: 'AUSTRALIA',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.foxtel.com.au/'
     },
     secondary: {
       name: 'Kayo Sports',
       description: 'Stream every F1 session live and on-demand with Kayo Sports.',
       region: 'AUSTRALIA \u00b7 STREAMING',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.kayosports.com.au/'
     }
   },
   CA: {
@@ -114,14 +127,16 @@ export const BROADCASTERS: Record<string, CountryBroadcasters> = {
       description: 'Full F1 coverage in Canada with all practice sessions, qualifying, and races.',
       region: 'CANADA',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.dazn.com/'
     },
     secondary: {
       name: 'RDS',
       description: 'French-language coverage of all F1 sessions for Quebec and French Canada.',
       region: 'CANADA \u00b7 FRAN\u00c7AIS',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.rds.ca/'
     }
   },
   BR: {
@@ -130,14 +145,16 @@ export const BROADCASTERS: Record<string, CountryBroadcasters> = {
       description: 'Complete F1 coverage in Brazil with Portuguese commentary.',
       region: 'BRAZIL',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.band.uol.com.br/'
     },
     secondary: {
       name: 'F1 TV Pro',
       description: 'The official Formula 1 streaming service. Every practice, qualifying, sprint and race.',
       region: 'WORLDWIDE \u00b7 OFFICIAL',
       variant: 'red',
-      icon: 'globe'
+      icon: 'globe',
+      href: 'https://f1tv.formula1.com/'
     }
   },
   JP: {
@@ -146,14 +163,16 @@ export const BROADCASTERS: Record<string, CountryBroadcasters> = {
       description: 'Full F1 coverage in Japan with Japanese commentary.',
       region: 'JAPAN',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.dazn.com/'
     },
     secondary: {
       name: 'Fuji TV',
       description: 'Selected F1 races broadcast on Fuji Television Network.',
       region: 'JAPAN',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.fujitv.com/'
     }
   },
   IT: {
@@ -162,14 +181,16 @@ export const BROADCASTERS: Record<string, CountryBroadcasters> = {
       description: 'Complete F1 coverage in Italy with Italian commentary.',
       region: 'ITALY',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.sky.it/sport/formula-1'
     },
     secondary: {
       name: 'TV8',
       description: 'Selected F1 races available free-to-air on TV8.',
       region: 'ITALY \u00b7 FREE',
       variant: 'dark',
-      icon: 'tv'
+      icon: 'tv',
+      href: 'https://www.tv8.it/'
     }
   }
 };
@@ -186,3 +207,4 @@ export const COUNTRY_OPTIONS = [
   { code: 'JP', flag: '\ud83c\uddef\ud83c\uddf5', label: 'JAPAN' },
   { code: 'IT', flag: '\ud83c\uddee\ud83c\uddf9', label: 'ITALY' }
 ];
+
