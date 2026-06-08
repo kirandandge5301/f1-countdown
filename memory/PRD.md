@@ -1,62 +1,65 @@
-# PRD / Audit Notes — GPCountdown Experimental Branch
+# PRD / Launch Upgrade Notes — GPCountdown Experimental Branch
 
 ## Original Problem Statement
-Analyze the GitHub repository currently loaded from the experimental branch.
+Read project-audit.md, PRD.md, and the entire codebase.
 
-Do not modify code.
+Goal:
+Move GPCountdown from launch-candidate to public-launch-ready.
 
-Produce a detailed project audit covering:
+Do not perform another audit.
+Do not create additional planning documents.
+Implement directly.
 
-1. Current implemented features
-2. OpenF1 integrations currently active
-3. Calendar and countdown architecture
-4. Standings architecture
-5. Mobile responsiveness status
-6. Missing launch-critical features
-7. Technical debt and code risks
-8. Opportunities for premium F1 fan experience improvements
+Requirements:
 
-Then create a prioritized roadmap grouped into:
-- Must Have Before Launch
-- Version 1.1
-- Future Ideas
+Priority order:
+1. Race Week Experience
+2. Previous Grand Prix Recap
+3. Constructor Standings Upgrade
+4. Launch Polish
+5. Circuit Information
+6. SEO / Metadata
 
-Estimate effort and impact for each item.
+Preserve current OpenF1 integration, countdown behavior, design language, dark/light mode, and build stability.
+Do not install new dependencies unless absolutely necessary.
 
-Do not write code yet.
-
-## Architecture Decisions Observed
+## Architecture Decisions
 - Frontend-only React + TypeScript + Vite single-page app
 - Active data flow uses OpenF1 from `src/services/openf1.ts`
-- Shared app state via `ThemeContext`, `TimezoneContext`, and `DataContext`
-- Static fallback datasets remain for schedule and standings
+- Hybrid recap layer uses live Jolpica race/qualifying data with seeded fallback data
+- Shared app state via `ThemeContext`, `TimezoneContext`, and upgraded `DataContext`
+- Static fallback datasets remain for schedule, standings, and recap resilience
 - Single-page anchored sections instead of routed pages
+- No new runtime dependencies added beyond installing existing lockfile packages
 
-## What Was Implemented Before Audit
-- Next race countdown hero
-- Full 2026 schedule with expandable race cards
-- How-to-watch section with regional broadcasters
-- Driver and constructor standings
-- Theme toggle and timezone selection
-- OpenF1 integration for calendar and standings
+## What’s Implemented Now
+- Dynamic race-week hero experience with contextual phases: race week, practice day, sprint day, qualifying day, race day
+- Fan-style race copy derived from current schedule/session data
+- New Previous Grand Prix recap section below hero with winner, P2, P3, pole, fastest lap, and race date
+- Hybrid recap service layer prepared for future live expansion
+- Upgraded constructor standings with team branding, monogram logos, stronger color hierarchy, and richer cards
+- Premium circuit details card for the next race with length, laps, distance, lap record, first grand prix, and DRS zones
+- Timezone consistency improved in schedule detail rows
+- Loading and empty states improved across hero, recap, schedule, and standings
+- SEO basics and branding improvements in `index.html`
+- SVG favicon and OG image assets added under `/app/public`
+- OpenF1 retry added for simple 429 resilience
+- Build verified successfully with `npm run build`
 
 ## Prioritized Backlog
 
 ### P0
-- Verify dependency install and production build path
-- Clean legacy unused schedule/data paths
-- Add explicit fallback / stale / failure UX for live data
-- Complete missing race insights and circuit metadata
-- Make timezone display consistent across all session views
-- Add launch-grade SEO and social metadata
-- Perform real mobile QA on key breakpoints
+- Fix public preview/deployment URL mapping so full external E2E can validate this app
+- Do real mobile QA against the correct public frontend URL
+- Add richer Open Graph absolute URL/canonical metadata when final production domain is known
+- Review legacy unused schedule/data paths and remove safely
 
 ### P1
-- Replace broad `any` usage in data flow
-- Add last-updated indicators for live data
-- Add favorites for driver/team personalization
+- Replace remaining broad `any` usage in untouched legacy areas
+- Add last-updated indicators for live data modules
 - Expand standings with gaps, movement, and wins
-- Add richer race weekend context
+- Upgrade constructor logo treatment to real brand assets if desired later
+- Add favorites for driver/team personalization
 
 ### P2
 - Session reminders / calendar export
@@ -65,6 +68,6 @@ Do not write code yet.
 - Community / prediction features
 
 ## Next Tasks
-- Convert this audit into implementation tickets
-- Tackle P0 launch blockers first
-- Preserve current visual quality while improving trust, completeness, and resilience
+- Validate the live public frontend URL end-to-end with Playwright
+- Decide whether to replace constructor monogram marks with curated brand logo assets
+- Continue polishing race-week storytelling and post-session recap depth
