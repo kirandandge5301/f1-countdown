@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#090909"/>
+  <rect x="54" y="54" width="1092" height="522" rx="36" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.1)"/>
+  <path d="M116" d="M116 168H520L422 266H250L168 420H566" stroke="#E10600" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="575" cy="420" r="18" fill="#fff"/>
+  <text x="116" y="318" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="96" font-weight="700">GPCountdown</text>
+  <text x="116" y="392" fill="#A0A0A0" font-family="Inter, Arial, sans-serif" font-size="32">Formula 1 race week countdown, schedule, standings, and recap.</text>
+  <text x="116" y="468" fill="#E10600" font-family="Inter, Arial, sans-serif" font-size="28" letter-spacing="5">EVERY SECOND COUNTS</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="54" y1="54" x2="1146" y2="576" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#161616"/>
+      <stop offset="1" stop-color="#0B0B0B"/>
+    </linearGradient>
+  </defs>
+</svg>

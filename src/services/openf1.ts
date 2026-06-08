@@ -5,6 +5,7 @@
  */
 
 import { DRIVERS_STANDINGS as FALLBACK_DRIVERS, CONSTRUCTORS_STANDINGS as FALLBACK_CONSTRUCTORS } from '@/data/standings';
+import { getConstructorBranding } from '@/data/constructorBranding';
 
 const API_BASE = 'https://api.openf1.org/v1';
 const CACHE_DURATION = 60000; // 60 seconds
@@ -119,11 +120,17 @@ function setCache<T>(key: string, data: T): void {
 
 // ======= FETCH UTILS =======
 
-async function fetchJSON<T>(endpoint: string): Promise<T | null> {
+async function fetchJSON<T>(endpoint: string, attempt: number = 0): Promise<T | null> {
   try {
     const resp = await fetch(`${API_BASE}${endpoint}`, {
       headers: { 'Accept': 'application/json' }
     });
+
+    if (resp.status === 429 && attempt < 1) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      return fetchJSON<T>(endpoint, attempt + 1);
+    }
+
     if (!resp.ok) {
       console.warn(`OpenF1 API error: ${resp.status} for ${endpoint}`);
       return null;
@@ -370,6 +377,9 @@ export interface EnrichedConstructorStanding {
   position: number;
   name: string;
   teamColor: string;
+  teamSecondaryColor: string;
+  logoText: string;
+  base: string;
   points: number;
   wins: number;
 }
@@ -421,33 +431,31 @@ export async function fetchEnrichedConstructorStandings(): Promise<EnrichedConst
   const champEntries = await fetchTeamChampionship();
 
   if (!champEntries || champEntries.length === 0) {
-    return FALLBACK_CONSTRUCTORS;
+    return FALLBACK_CONSTRUCTORS.map((team) => {
+      const branding = getConstructorBranding(team.name);
+
+      return {
+        ...team,
+        teamColor: branding.primary,
+        teamSecondaryColor: branding.secondary,
+        logoText: branding.monogram,
+        base: branding.shortName,
+      };
+    });
   }
 
   const sorted = [...champEntries].sort((a, b) => a.position_current - b.position_current);
 
-  // Map team names to approximate colors
-  const teamColorMap: Record<string, string> = {
-    'Red Bull Racing': '#1E41FF',
-    'McLaren': '#FF8000',
-    'Ferrari': '#DC0000',
-    'Mercedes': '#27F4D2',
-    'Aston Martin': '#006F62',
-    'Williams': '#64C4FF',
-    'RB': '#6692FF',
-    'Racing Bulls': '#6692FF',
-    'Haas F1 Team': '#B6BABD',
-    'Alpine': '#FF87BC',
-    'Kick Sauber': '#52E252',
-  };
-
   return sorted.map(entry => ({
-  position: entry.position_current,
-  name: entry.team_name,
-  teamColor: teamColorMap[entry.team_name] || '#999999',
-  points: Math.round(entry.points_current),
-  wins: 0
-}));
+    position: entry.position_current,
+    name: entry.team_name,
+    teamColor: getConstructorBranding(entry.team_name).primary,
+    teamSecondaryColor: getConstructorBranding(entry.team_name).secondary,
+    logoText: getConstructorBranding(entry.team_name).monogram,
+    base: getConstructorBranding(entry.team_name).shortName,
+    points: Math.round(entry.points_current),
+    wins: 0
+  }));
 }
 
 // ======= FORCE REFRESH =======

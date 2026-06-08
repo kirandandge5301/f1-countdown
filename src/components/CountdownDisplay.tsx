@@ -21,12 +21,12 @@ export default function CountdownDisplay({ targetTime, size = 'hero', showLabels
     );
   }
 
-  const digitClass = "font-mono text-[clamp(44px,10vw,120px)] md:text-[clamp(60px,12vw,160px)] font-light text-[var(--text-hero-countdown)] tracking-[-0.04em] leading-none tabular-nums";
-  const separatorClass = "font-mono text-[clamp(40px,8vw,100px)] font-light text-[var(--text-tertiary)] opacity-50 self-start pt-[clamp(8px,1.5vw,16px)]";
-  const labelClass = "text-xs tracking-[0.15em] text-[var(--text-tertiary)] uppercase text-center mt-2";
+  const digitClass = "font-mono text-[clamp(42px,15vw,124px)] md:text-[clamp(64px,11vw,156px)] font-light text-[var(--text-hero-countdown)] tracking-[-0.04em] leading-none tabular-nums";
+  const separatorClass = "hidden sm:block font-mono text-[clamp(32px,6vw,88px)] font-light text-[var(--text-tertiary)] opacity-50 self-start pt-[clamp(8px,1.5vw,16px)]";
+  const labelClass = "text-[10px] sm:text-xs tracking-[0.15em] text-[var(--text-tertiary)] uppercase text-center mt-2";
 
   return (
-    <div className="flex flex-wrap justify-center items-start gap-x-[clamp(12px,2vw,32px)] md:flex-nowrap">
+    <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:flex sm:flex-wrap sm:justify-center sm:items-start sm:gap-x-[clamp(12px,2vw,32px)] md:flex-nowrap">
       {/* DAYS */}
       <div className="flex flex-col items-center">
         <span className={digitClass}>{pad(days)}</span>

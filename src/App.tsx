@@ -4,6 +4,7 @@ import { DataProvider } from '@/context/DataContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import NextRaceSection from '@/sections/NextRaceSection';
+import PreviousRaceSection from '@/sections/PreviousRaceSection';
 import ScheduleSection from '@/sections/ScheduleSection';
 import HowToWatchSection from '@/sections/HowToWatchSection';
 import StandingsSection from '@/sections/StandingsSection';
@@ -17,6 +18,7 @@ function App() {
             <Header />
             <main>
               <NextRaceSection />
+              <PreviousRaceSection />
               <ScheduleSection />
               <HowToWatchSection />
               <StandingsSection />

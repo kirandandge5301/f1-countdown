@@ -44,11 +44,12 @@ export default function BroadcastCard({ variant, badge, title, description, href
   if (href) {
     return (
       <a
+        data-testid={`broadcast-card-link-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
         href={href}
         target="_blank"
         rel="noopener noreferrer"
         aria-label={`Open ${label} website in a new tab`}
-        className="block"
+        className="block focus-visible:rounded-2xl"
       >
         {card}
       </a>

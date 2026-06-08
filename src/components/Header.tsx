@@ -6,6 +6,7 @@ import { TIMEZONE_OPTIONS } from '@/data/timezones';
 
 const NAV_LINKS = [
   { label: 'next race', href: '#next-race' },
+  { label: 'recap', href: '#previous-race' },
   { label: 'schedule', href: '#schedule' },
   { label: 'watch', href: '#how-to-watch' },
   { label: 'standings', href: '#standings' }
@@ -71,7 +72,7 @@ export default function Header() {
       <header className={`sticky top-0 z-[100] border-b border-[var(--border-subtle)] transition-colors duration-300 ${scrolled ? 'bg-[var(--bg-primary)]/95 backdrop-blur-md' : 'bg-[var(--bg-primary)]'}`}>
         <div className="flex items-center justify-between px-[clamp(20px,5vw,64px)] py-4">
           {/* Logo */}
-          <button onClick={() => handleNavClick('#next-race')} className="flex items-center gap-2 shrink-0">
+          <button data-testid="header-logo-button" onClick={() => handleNavClick('#next-race')} className="flex items-center gap-2 shrink-0">
             <span className="w-2 h-2 rounded-full bg-[#E10600]" />
             <div className="flex items-center gap-1.5">
               <span className="text-[15px] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">GPCountdown</span>
@@ -84,6 +85,7 @@ export default function Header() {
             {NAV_LINKS.map(link => (
               <button
                 key={link.href}
+                data-testid={`header-nav-${link.label.replace(/\s+/g, '-')}`}
                 onClick={() => handleNavClick(link.href)}
                 className={`text-sm transition-colors duration-200 capitalize ${
                   activeSection === link.href.slice(1) ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -99,7 +101,9 @@ export default function Header() {
             {/* Timezone Selector */}
             <div ref={tzRef} className="relative">
               <button
+                data-testid="timezone-selector-button"
                 onClick={() => setTzOpen(!tzOpen)}
+                aria-expanded={tzOpen}
                 className="flex items-center gap-2 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors min-w-[140px]"
               >
                 <Globe size={15} />
@@ -112,6 +116,7 @@ export default function Header() {
                   {TIMEZONE_OPTIONS.map(opt => (
                     <button
                       key={opt.value}
+                      data-testid={`timezone-option-${opt.value.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}`}
                       onClick={() => {
                         setTimezone(opt.value);
                         setTzOpen(false);
@@ -130,6 +135,7 @@ export default function Header() {
 
             {/* Theme Toggle */}
             <button
+              data-testid="theme-toggle-button"
               onClick={toggleTheme}
               className="w-9 h-9 flex items-center justify-center bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
@@ -138,6 +144,7 @@ export default function Header() {
 
             {/* Mobile Menu */}
             <button
+              data-testid="mobile-menu-open-button"
               onClick={() => setMobileOpen(true)}
               className="md:hidden w-9 h-9 flex items-center justify-center text-[var(--text-secondary)]"
             >
@@ -150,13 +157,14 @@ export default function Header() {
       {/* Mobile Menu Overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-[300] bg-[var(--bg-primary)] flex flex-col items-center justify-center">
-          <button onClick={() => setMobileOpen(false)} className="absolute top-6 right-6 text-[var(--text-secondary)]">
+          <button data-testid="mobile-menu-close-button" onClick={() => setMobileOpen(false)} className="absolute top-6 right-6 text-[var(--text-secondary)]">
             <X size={28} />
           </button>
           <nav className="flex flex-col items-center gap-10 text-2xl">
             {NAV_LINKS.map(link => (
               <button
                 key={link.href}
+                data-testid={`mobile-nav-${link.label.replace(/\s+/g, '-')}`}
                 onClick={() => handleNavClick(link.href)}
                 className="capitalize transition-colors hover:text-[#E10600]"
               >

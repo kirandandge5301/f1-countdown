@@ -68,6 +68,23 @@ export function formatDateInZone(utcString: string, timezone: string): string {
   }
 }
 
+export function formatDateTimeInZone(utcString: string, timezone: string): string {
+  try {
+    const date = new Date(utcString);
+    return date.toLocaleString('en-US', {
+      timeZone: timezone,
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return '---';
+  }
+}
+
 export function formatRaceTimeInZone(utcTime: string, date: string, timezone: string): string {
   try {
     const dateTimeString = `${date}T${utcTime}:00Z`;

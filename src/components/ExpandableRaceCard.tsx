@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useCountdown } from '@/hooks/useCountdown';
-import { formatTimeInZone } from '@/data/timezones';
+import { formatDateInZone, formatTimeInZone } from '@/data/timezones';
 import type { RaceWeekend, Session } from '@/services/openf1';
 
 interface ExpandableRaceCardProps {
@@ -38,21 +38,6 @@ export default function ExpandableRaceCard({
     return 'live';
   };
 
-  const formatSessionTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const hours = date.getUTCHours().toString().padStart(2, '0');
-    const mins = date.getUTCMinutes().toString().padStart(2, '0');
-    return `${hours}:${mins}`;
-  };
-
-  const formatSessionDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const dayName = d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }).toUpperCase();
-    const dayNum = d.getUTCDate().toString().padStart(2, '0');
-    const month = d.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
-    return `${dayName} ${dayNum} ${month}`;
-  };
-
   const SessionRow = ({ session }: { session: Session }) => {
     const status = getSessionStatus(session);
     const { days, hours } = useCountdown(session.date_start);
@@ -67,7 +52,7 @@ export default function ExpandableRaceCard({
 
     return (
       <div className="py-3 px-4 border-b border-[var(--border-subtle)] last:border-b-0 hover:bg-[var(--bg-surface-hover)] transition-colors">
-        <div className="flex items-center justify-between gap-3 flex-col sm:flex-row sm:items-center">
+        <div className="flex items-start justify-between gap-3 flex-col sm:flex-row sm:items-center">
           <div className="flex items-center gap-3 min-w-0 w-full sm:w-auto">
             <span className={`text-xs font-semibold px-2.5 py-1 rounded-md ${badge.bg} ${badge.text} whitespace-nowrap`}>
               {badge.label}
@@ -77,10 +62,11 @@ export default function ExpandableRaceCard({
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm flex-wrap justify-between sm:justify-end w-full sm:w-auto">
+          <div className="flex flex-col items-start gap-1 text-sm sm:items-end w-full sm:w-auto">
             <span className="text-[var(--text-secondary)] whitespace-nowrap">
-              {formatSessionDate(session.date_start)} · {formatSessionTime(session.date_start)} UTC
+              {formatDateInZone(session.date_start, timezone)} · {formatTimeInZone(session.date_start, timezone)}
             </span>
+            <span className="text-xs text-[var(--text-tertiary)]">{timezoneLabel}</span>
             {status === 'upcoming' && (
               <span className="font-mono text-xs text-[var(--text-tertiary)] whitespace-nowrap">
                 {String(days).padStart(2, '0')}d {String(hours).padStart(2, '0')}h
@@ -94,15 +80,18 @@ export default function ExpandableRaceCard({
 
   return (
     <div
-      className={`rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] transition-all overflow-hidden ${
+      data-testid={`schedule-race-card-${race.round}`}
+      className={`rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] transition-[transform,border-color,background-color,box-shadow] overflow-hidden hover:-translate-y-0.5 hover:shadow-[0_18px_60px_rgba(0,0,0,0.12)] ${
         isNext ? 'ring-1 ring-[#E10600]/30 bg-[rgba(225,6,0,0.03)]' : ''
       } ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}
       style={{ animationDelay: `${delay}ms` }}
     >
       {/* Header - Always visible */}
       <button
+        data-testid={`schedule-race-toggle-${race.round}`}
+        aria-expanded={expanded}
         onClick={() => setExpanded(!expanded)}
-        className="w-full p-6 flex items-start justify-between gap-4 hover:bg-[var(--bg-surface-hover)] transition-colors text-left"
+        className="w-full p-4 sm:p-6 flex flex-col sm:flex-row items-start justify-between gap-4 hover:bg-[var(--bg-surface-hover)] transition-colors text-left"
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2 flex-wrap">
@@ -123,7 +112,7 @@ export default function ExpandableRaceCard({
           </p>
         </div>
 
-        <div className="text-right flex-shrink-0">
+        <div className="text-left sm:text-right flex-shrink-0 w-full sm:w-auto">
           <span className="font-mono text-base md:text-lg font-bold text-[var(--text-primary)]">
             {raceTime}
           </span>
@@ -136,7 +125,7 @@ export default function ExpandableRaceCard({
         </div>
 
         <ChevronDown
-          className={`ml-2 mt-1 transition-transform duration-300 flex-shrink-0 ${
+          className={`self-end sm:self-auto ml-0 sm:ml-2 mt-1 transition-transform duration-300 flex-shrink-0 ${
             expanded ? 'rotate-180' : ''
           }`}
           size={20}

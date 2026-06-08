@@ -6,6 +6,7 @@
 .dark {
   --bg-primary: #0A0A0A;
   --bg-surface: #111111;
+  --bg-surface-elevated: #171717;
   --bg-surface-hover: #1A1A1A;
   --text-primary: #FFFFFF;
   --text-secondary: #888888;
@@ -31,6 +32,7 @@
 .light {
   --bg-primary: #FFFFFF;
   --bg-surface: #F5F5F5;
+  --bg-surface-elevated: #FFFFFF;
   --bg-surface-hover: #EBEBEB;
   --text-primary: #111111;
   --text-secondary: #666666;
@@ -64,6 +66,7 @@
     background-color: var(--bg-primary);
     color: var(--text-primary);
     transition: background-color 0.3s, color 0.3s;
+    overflow-x: hidden;
   }
 
   * {
@@ -73,6 +76,12 @@
   ::selection {
     background-color: rgba(225, 6, 0, 0.3);
     color: var(--text-primary);
+  }
+
+  button:focus-visible,
+  a:focus-visible {
+    outline: 2px solid rgba(225, 6, 0, 0.9);
+    outline-offset: 2px;
   }
 }
 
@@ -133,6 +142,10 @@
   opacity: 0;
 }
 
+.text-balance {
+  text-wrap: balance;
+}
+
 /* ===== REDUCED MOTION ===== */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
@@ -160,4 +173,8 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-tertiary);
+}
+
+img {
+  max-width: 100%;
 }

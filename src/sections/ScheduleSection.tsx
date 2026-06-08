@@ -6,7 +6,7 @@ import type { RaceWeekend, Session } from '@/services/openf1';
 
 export default function ScheduleSection() {
   const { timezone, timezoneLabel } = useTimezone();
-  const { raceWeekends, loading } = useData();
+  const { raceWeekends, raceLoading, hasLiveRaceData } = useData();
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLElement>({ threshold: 0.1 });
 
   const now = new Date();
@@ -38,7 +38,13 @@ export default function ScheduleSection() {
           Every round of the FIA Formula One World Championship. Times shown in {timezoneLabel}.
         </p>
 
-        {loading ? (
+        {!hasLiveRaceData && !raceLoading && (
+          <div className="mb-8 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+            Live schedule data is resting for the moment, so GPCountdown is showing the built-in season calendar.
+          </div>
+        )}
+
+        {raceLoading ? (
           <div className="space-y-4">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="h-24 rounded-2xl bg-[var(--bg-surface)] animate-pulse" />
@@ -61,6 +67,13 @@ export default function ScheduleSection() {
                 />
               );
             })}
+          </div>
+        )}
+
+        {!raceLoading && raceWeekends.length === 0 && (
+          <div className="rounded-[28px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-8 text-center">
+            <p className="text-lg font-medium text-[var(--text-primary)]">The calendar hasn’t fired up yet.</p>
+            <p className="mt-3 text-[var(--text-secondary)]">As soon as sessions land, the full season view will repopulate automatically.</p>
           </div>
         )}
       </div>

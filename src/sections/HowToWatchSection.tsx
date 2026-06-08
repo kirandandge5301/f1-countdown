@@ -61,6 +61,7 @@ export default function HowToWatchSection() {
             {COUNTRY_OPTIONS.map(country => (
               <button
                 key={country.code}
+                data-testid={`country-selector-${country.code.toLowerCase()}`}
                 onClick={() => setSelectedCountry(country.code)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-medium tracking-[0.08em] transition-all duration-150 ${
                   selectedCountry === country.code
@@ -69,6 +70,7 @@ export default function HowToWatchSection() {
                 }`}
               >
                 <span>{country.flag}</span>
+                <span className="sm:hidden">{country.code}</span>
                 <span className="hidden sm:inline">{country.label}</span>
               </button>
             ))}
