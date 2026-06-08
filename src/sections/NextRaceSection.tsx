@@ -130,6 +130,12 @@ export default function NextRaceSection() {
               <CountdownDisplay targetTime={nextSessionTime} size="hero" />
             </div>
 
+            <div className="mb-12 text-center">
+              <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-[var(--text-tertiary)]">
+                Every Second Matters.
+              </p>
+            </div>
+
             <div className="max-w-5xl mx-auto mb-12 px-2">
               <CircuitDetailsCard
                 meetingName={race.meeting.meeting_name}

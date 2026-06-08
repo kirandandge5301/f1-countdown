@@ -31,6 +31,11 @@ const TIMEZONE_DISPLAY_MAP: Record<string, string> = {
   'America/Sao_Paulo': 'São Paulo',
 };
 
+const TIMEZONE_SHORT_LABELS: Record<string, string> = {
+  UTC: 'UTC',
+  'Asia/Kolkata': 'IST',
+};
+
 export function getTimezoneShortCode(timezone: string): string {
   try {
     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -46,7 +51,7 @@ export function getTimezoneShortCode(timezone: string): string {
 
 export function getTimezoneDisplayLabel(timezone: string): string {
   const prefix = TIMEZONE_DISPLAY_MAP[timezone] || timezone.split('/').pop()?.replace(/_/g, ' ') || 'User Timezone';
-  const shortCode = getTimezoneShortCode(timezone);
+  const shortCode = TIMEZONE_SHORT_LABELS[timezone] || getTimezoneShortCode(timezone);
 
   return prefix === shortCode ? prefix : `${prefix} (${shortCode})`;
 }

@@ -10,7 +10,7 @@ export default function Footer() {
           &copy; {seasonYear} GPCountdown. Not affiliated with Formula 1.
         </span>
         <span className="text-xs text-[var(--text-tertiary)] italic">
-          Every second counts.
+          Every Second Matters.
         </span>
       </div>
     </footer>
