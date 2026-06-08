@@ -33,33 +33,27 @@ Do not install new dependencies unless absolutely necessary.
 - No new runtime dependencies added beyond installing existing lockfile packages
 
 ## What’s Implemented Now
-- Dynamic race-week hero experience with contextual phases: race week, practice day, sprint day, qualifying day, race day
-- Fan-style race copy derived from current schedule/session data
-- New Previous Grand Prix recap section below hero with winner, P2, P3, pole, fastest lap, and race date
-- Hybrid recap service layer prepared for future live expansion
-- Upgraded constructor standings with team branding, monogram logos, stronger color hierarchy, and richer cards
-- Premium circuit details card for the next race with length, laps, distance, lap record, first grand prix, and DRS zones
-- Timezone consistency improved in schedule detail rows
-- Loading and empty states improved across hero, recap, schedule, and standings
-- SEO basics and branding improvements in `index.html`
-- SVG favicon and OG image assets added under `/app/public`
-- OpenF1 retry added for simple 429 resilience
-- Build verified successfully with `npm run build`
+- Single source of truth for race progression now prioritizes live OpenF1 season data and falls back only to a verified 2026 archive
+- Bahrain and Saudi Arabia no longer appear in active race progression, countdown logic, recap logic, or schedule because they are not in the active verified season source
+- Previous Grand Prix recap now uses live Jolpica results when available and verified archived results only when they match the selected verified season
+- Fabricated seeded standings were removed; standings now show verified OpenF1 data or an unavailable state
+- Circuit card now uses structured circuit data with real values or explicit unavailable messaging instead of unfinished placeholder text
+- Timezone labels upgraded to professional labels like `India (IST)` and shared timezone logic is aligned across countdown, schedule, session cards, and race-week messaging
+- Race-week messaging now supports race week, cars on track today, sprint day, qualifying day, lights out today, and race weekend complete based on real session timing
+- Preview host configuration remains fixed for Emergent preview domains and build is verified successfully
 
 ## Prioritized Backlog
 
 ### P0
-- Fix public preview/deployment URL mapping so full external E2E can validate this app
-- Do real mobile QA against the correct public frontend URL
 - Add richer Open Graph absolute URL/canonical metadata when final production domain is known
-- Review legacy unused schedule/data paths and remove safely
+- Continue production QA across more mobile breakpoints and lower-bandwidth conditions
+- Consider a lightweight backend/cache adapter if OpenF1 front-end rate limits become more frequent in production
 
 ### P1
 - Replace remaining broad `any` usage in untouched legacy areas
-- Add last-updated indicators for live data modules
-- Expand standings with gaps, movement, and wins
-- Upgrade constructor logo treatment to real brand assets if desired later
-- Add favorites for driver/team personalization
+- Add last-updated indicators for live modules
+- Add explicit API health badges for schedule, recap, and standings modules
+- Upgrade constructor logo treatment to curated approved assets if needed later
 
 ### P2
 - Session reminders / calendar export
@@ -68,6 +62,6 @@ Do not install new dependencies unless absolutely necessary.
 - Community / prediction features
 
 ## Next Tasks
-- Validate the live public frontend URL end-to-end with Playwright
-- Decide whether to replace constructor monogram marks with curated brand logo assets
-- Continue polishing race-week storytelling and post-session recap depth
+- Monitor live OpenF1 rate limits and decide whether to add a server-side cache layer later
+- Validate public frontend again after deployment with full mobile/browser coverage
+- If desired, add last-updated timestamps and stricter API status surfaces next

@@ -8,11 +8,11 @@ import RaceInsight from '@/components/RaceInsight';
 import { getSessionDisplayName } from '@/services/openf1';
 import type { Session } from '@/services/openf1';
 import { CIRCUIT_INFO } from '@/data/circuitInfo';
-import { Flag, Flame, Share2 } from 'lucide-react';
+import { Flag, Flame } from 'lucide-react';
 
 export default function NextRaceSection() {
   const { timezoneLabel } = useTimezone();
-  const { nextRace, raceWeekExperience, raceLoading, hasLiveRaceData } = useData();
+  const { nextRace, raceWeekExperience, raceLoading, hasLiveRaceData, totalRounds } = useData();
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLDivElement>({ threshold: 0.1 });
 
   const race = nextRace?.race;
@@ -21,18 +21,6 @@ export default function NextRaceSection() {
   const nextSessionTime = nextSession ? new Date(nextSession.date_start) : null;
 
   const circuitInfo = race ? CIRCUIT_INFO[race.meeting.meeting_name] : null;
-
-  const shareOnX = () => {
-    if (!race || !nextSessionTime) return;
-    const diff = nextSessionTime.getTime() - Date.now();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const raceName = race.meeting.meeting_name;
-
-    const tweet = `🏁 ${raceName} in ${days}d ${hours}h!\nTrack every session with GPCountdown.\n#F1`;
-
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`, '_blank');
-  };
 
   return (
     <section
@@ -77,7 +65,7 @@ export default function NextRaceSection() {
                 </span>
               </div>
               <span className="font-mono text-xs text-[var(--text-tertiary)]">
-                ROUND {String(race.round).padStart(2, '0')} / 24
+                ROUND {String(race.round).padStart(2, '0')} / {String(totalRounds).padStart(2, '0')}
               </span>
             </div>
 
@@ -94,7 +82,7 @@ export default function NextRaceSection() {
                     </span>
                     {!hasLiveRaceData && (
                       <span className="rounded-full border border-[var(--border-subtle)] px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
-                        Schedule fallback active
+                        Verified archive season
                       </span>
                     )}
                   </div>
@@ -142,22 +130,12 @@ export default function NextRaceSection() {
               <CountdownDisplay targetTime={nextSessionTime} size="hero" />
             </div>
 
-            {/* Share Button */}
-            <div className="flex justify-center mb-12 md:mb-16">
-              <button
-                data-testid="share-countdown-button"
-                onClick={shareOnX}
-                className="px-6 sm:px-8 py-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[var(--text-primary)] text-sm font-medium flex items-center gap-2 transition-[background-color,transform,border-color] active:scale-95 hover:-translate-y-0.5"
-              >
-                <Share2 size={16} />
-                Share Countdown on X
-              </button>
-            </div>
-
             <div className="max-w-5xl mx-auto mb-12 px-2">
               <CircuitDetailsCard
                 meetingName={race.meeting.meeting_name}
                 circuitName={race.meeting.circuit_short_name}
+                city={race.meeting.location}
+                country={race.meeting.country_name}
                 circuitInfo={circuitInfo}
                 isVisible={isVisible}
               />

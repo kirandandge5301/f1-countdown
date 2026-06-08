@@ -4,9 +4,9 @@ export interface TimezoneOption {
 }
 
 export const TIMEZONE_OPTIONS: TimezoneOption[] = [
-  { label: 'GMT', value: 'UTC' },
-  { label: 'London', value: 'Europe/London' },
-  { label: 'Paris', value: 'Europe/Paris' },
+  { label: 'UTC', value: 'UTC' },
+  { label: 'United Kingdom', value: 'Europe/London' },
+  { label: 'Central Europe', value: 'Europe/Paris' },
   { label: 'New York', value: 'America/New_York' },
   { label: 'Los Angeles', value: 'America/Los_Angeles' },
   { label: 'India', value: 'Asia/Kolkata' },
@@ -14,8 +14,42 @@ export const TIMEZONE_OPTIONS: TimezoneOption[] = [
   { label: 'Singapore', value: 'Asia/Singapore' },
   { label: 'Tokyo', value: 'Asia/Tokyo' },
   { label: 'Sydney', value: 'Australia/Sydney' },
-  { label: 'Sao Paulo', value: 'America/Sao_Paulo' }
+  { label: 'São Paulo', value: 'America/Sao_Paulo' }
 ];
+
+const TIMEZONE_DISPLAY_MAP: Record<string, string> = {
+  UTC: 'UTC',
+  'Europe/London': 'United Kingdom',
+  'Europe/Paris': 'Central Europe',
+  'America/New_York': 'New York',
+  'America/Los_Angeles': 'Los Angeles',
+  'Asia/Kolkata': 'India',
+  'Asia/Dubai': 'Dubai',
+  'Asia/Singapore': 'Singapore',
+  'Asia/Tokyo': 'Tokyo',
+  'Australia/Sydney': 'Sydney',
+  'America/Sao_Paulo': 'São Paulo',
+};
+
+export function getTimezoneShortCode(timezone: string): string {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      timeZoneName: 'short',
+    });
+    const parts = formatter.formatToParts(new Date());
+    return parts.find((part) => part.type === 'timeZoneName')?.value || timezone;
+  } catch {
+    return timezone;
+  }
+}
+
+export function getTimezoneDisplayLabel(timezone: string): string {
+  const prefix = TIMEZONE_DISPLAY_MAP[timezone] || timezone.split('/').pop()?.replace(/_/g, ' ') || 'User Timezone';
+  const shortCode = getTimezoneShortCode(timezone);
+
+  return prefix === shortCode ? prefix : `${prefix} (${shortCode})`;
+}
 
 export function getTimezoneOffsetLabel(timezone: string): string {
   try {
@@ -36,7 +70,7 @@ export function detectUserTimezone(): string {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   } catch {
-    return 'Asia/Kolkata';
+    return 'UTC';
   }
 }
 

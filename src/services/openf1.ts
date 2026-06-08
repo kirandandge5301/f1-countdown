@@ -1,14 +1,18 @@
 /**
  * OpenF1 API Service
- * Handles all data fetching from the OpenF1 API with caching and fallback
+ * Handles all data fetching from the OpenF1 API with caching and verified fallback season support
  * Base URL: https://api.openf1.org/v1/
  */
 
-import { DRIVERS_STANDINGS as FALLBACK_DRIVERS, CONSTRUCTORS_STANDINGS as FALLBACK_CONSTRUCTORS } from '@/data/standings';
 import { getConstructorBranding } from '@/data/constructorBranding';
 
 const API_BASE = 'https://api.openf1.org/v1';
 const CACHE_DURATION = 60000; // 60 seconds
+export const VERIFIED_FALLBACK_YEAR = 2026;
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 // ======= TYPES =======
 
@@ -93,6 +97,12 @@ export interface NextRaceInfo {
   race: RaceWeekend;
   nextSession: Session | null;
   allSessions: Session[];
+}
+
+export interface PreferredRaceWeekendsResult {
+  weekends: RaceWeekend[];
+  seasonYear: number;
+  isLiveSeason: boolean;
 }
 
 // ======= CACHE =======
@@ -279,8 +289,10 @@ export async function fetchRaceWeekends(year: number = 2026): Promise<RaceWeeken
 
   if (!meetings.length) return [];
 
-  const weekends: RaceWeekend[] = meetings.map((meeting, idx) => {
-    const sessions = allSessions.filter(s => s.meeting_key === meeting.meeting_key);
+  const activeMeetings = meetings.filter((meeting) => !meeting.is_cancelled);
+
+  const weekends: RaceWeekend[] = activeMeetings.map((meeting, idx) => {
+    const sessions = allSessions.filter(s => s.meeting_key === meeting.meeting_key && !s.is_cancelled);
     sessions.sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime());
     const isSprint = sessions.some(s => s.session_name.toLowerCase().includes('sprint'));
     return {
@@ -293,6 +305,28 @@ export async function fetchRaceWeekends(year: number = 2026): Promise<RaceWeeken
 
   setCache(cacheKey, weekends);
   return weekends;
+}
+
+export async function fetchPreferredRaceWeekends(): Promise<PreferredRaceWeekendsResult> {
+  const currentYear = new Date().getUTCFullYear();
+  const candidateYears = Array.from(new Set([currentYear, VERIFIED_FALLBACK_YEAR]));
+
+  for (const year of candidateYears) {
+    const weekends = await fetchRaceWeekends(year);
+    if (weekends.length > 0) {
+      return {
+        weekends,
+        seasonYear: year,
+        isLiveSeason: true,
+      };
+    }
+  }
+
+  return {
+    weekends: [],
+    seasonYear: VERIFIED_FALLBACK_YEAR,
+    isLiveSeason: false,
+  };
 }
 
 export function findNextRace(weekends: RaceWeekend[]): NextRaceInfo | null {
@@ -325,19 +359,6 @@ export function findNextRace(weekends: RaceWeekend[]): NextRaceInfo | null {
         allSessions: sortedSessions
       };
     }
-  }
-
-  // All races passed, return the last one
-  if (weekends.length > 0) {
-    const last = weekends[weekends.length - 1];
-    const sorted = [...last.sessions].sort(
-      (a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime()
-    );
-    return {
-      race: last,
-      nextSession: null,
-      allSessions: sorted
-    };
   }
 
   return null;
@@ -385,63 +406,48 @@ export interface EnrichedConstructorStanding {
 }
 
 export async function fetchEnrichedDriverStandings(): Promise<EnrichedDriverStanding[]> {
-  const [champEntries, driverInfos] = await Promise.all([
-    fetchDriverChampionship(),
-    fetchDrivers()
-  ]);
+  const champEntries = await fetchDriverChampionship();
 
   if (!champEntries || champEntries.length === 0) {
-    // Return fallback
-   return FALLBACK_DRIVERS.map(d => ({
-  position: d.position,
-  firstName: d.firstName,
-  lastName: d.lastName,
-  team: d.team,
-  teamColor: d.teamColor,
-  points: d.points,
-  wins: d.wins,
-  driverNumber: 0,
-  headshotUrl: ''
-}));
+    return [];
+  }
+
+  await wait(350);
+  const driverInfos = await fetchDrivers();
+
+  if (driverInfos.length === 0) {
+    return [];
   }
 
   // Sort by position
   const sorted = [...champEntries].sort((a, b) => a.position_current - b.position_current);
 
-  return sorted.map(entry => {
-  const info = driverInfos.find(
-    d => d.driver_number === entry.driver_number
-  );
+  return sorted.flatMap((entry) => {
+    const info = driverInfos.find((driver) => driver.driver_number === entry.driver_number);
 
-  return {
-    position: entry.position_current,
-    firstName: info?.first_name || 'Driver',
-    lastName: info?.last_name || `#${entry.driver_number}`,
-    team: info?.team_name || 'Unknown',
-    teamColor: info?.team_colour || '#999999',
-    points: Math.round(entry.points_current),
-    wins: 0,
-    driverNumber: entry.driver_number,
-    headshotUrl: info?.headshot_url || ''
-  };
-});
+    if (!info?.first_name || !info.last_name || !info.team_name) {
+      return [];
+    }
+
+    return [{
+      position: entry.position_current,
+      firstName: info.first_name,
+      lastName: info.last_name,
+      team: info.team_name,
+      teamColor: info.team_colour || getConstructorBranding(info.team_name).primary,
+      points: Math.round(entry.points_current),
+      wins: 0,
+      driverNumber: entry.driver_number,
+      headshotUrl: info.headshot_url || ''
+    }];
+  });
 }
 
 export async function fetchEnrichedConstructorStandings(): Promise<EnrichedConstructorStanding[]> {
   const champEntries = await fetchTeamChampionship();
 
   if (!champEntries || champEntries.length === 0) {
-    return FALLBACK_CONSTRUCTORS.map((team) => {
-      const branding = getConstructorBranding(team.name);
-
-      return {
-        ...team,
-        teamColor: branding.primary,
-        teamSecondaryColor: branding.secondary,
-        logoText: branding.monogram,
-        base: branding.shortName,
-      };
-    });
+    return [];
   }
 
   const sorted = [...champEntries].sort((a, b) => a.position_current - b.position_current);

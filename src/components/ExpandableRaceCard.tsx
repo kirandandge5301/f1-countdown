@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useCountdown } from '@/hooks/useCountdown';
 import { formatDateInZone, formatTimeInZone } from '@/data/timezones';
-import type { RaceWeekend, Session } from '@/services/openf1';
+import { getSessionDisplayName, type RaceWeekend, type Session } from '@/services/openf1';
 
 interface ExpandableRaceCardProps {
   race: RaceWeekend;
@@ -24,7 +24,7 @@ export default function ExpandableRaceCard({
   const [expanded, setExpanded] = useState(false);
 
   const now = new Date();
-  const raceSession = race.sessions.find((s: Session) => s.session_type === 'race');
+  const raceSession = race.sessions.find((s: Session) => getSessionDisplayName(s) === 'Race');
   const raceTime = raceSession
     ? formatTimeInZone(raceSession.date_start, timezone)
     : formatTimeInZone(race.meeting.date_start, timezone);

@@ -1,6 +1,6 @@
 import { getSessionDisplayName, type NextRaceInfo, type RaceWeekend, type Session } from '@/services/openf1';
 
-export type RaceWeekPhase = 'RACE_WEEK' | 'PRACTICE_DAY' | 'SPRINT_DAY' | 'QUALIFYING_DAY' | 'RACE_DAY';
+export type RaceWeekPhase = 'RACE_WEEK' | 'PRACTICE_DAY' | 'SPRINT_DAY' | 'QUALIFYING_DAY' | 'RACE_DAY' | 'WEEKEND_COMPLETE';
 
 export interface RaceWeekExperience {
   phase: RaceWeekPhase;
@@ -53,6 +53,19 @@ function getTodayPhase(sessions: Session[], timezone: string): RaceWeekPhase | n
   return null;
 }
 
+function wasWeekendCompletedRecently(previousRace: RaceWeekend | null): boolean {
+  if (!previousRace?.sessions.length) return false;
+
+  const finalSession = [...previousRace.sessions].sort(
+    (a, b) => new Date(b.date_end || b.date_start).getTime() - new Date(a.date_end || a.date_start).getTime(),
+  )[0];
+
+  const endTime = new Date(finalSession.date_end || finalSession.date_start).getTime();
+  const hoursSince = (Date.now() - endTime) / (1000 * 60 * 60);
+
+  return hoursSince >= 0 && hoursSince <= 18;
+}
+
 function getCopyForPhase(phase: RaceWeekPhase, race: RaceWeekend): Pick<RaceWeekExperience, 'label' | 'primaryCopy' | 'secondaryCopy'> {
   const meetingName = race.meeting.meeting_name;
   const shortName = getMeetingShortName(race);
@@ -84,9 +97,9 @@ function getCopyForPhase(phase: RaceWeekPhase, race: RaceWeekend): Pick<RaceWeek
       secondaryCopy: `${circuit} is next on the calendar, and the first real clues are almost here.`,
     },
     PRACTICE_DAY: {
-      label: 'PRACTICE DAY',
-      primaryCopy: `${circuit} is open for the first proper read of the weekend.`,
-      secondaryCopy: 'Long runs, setup changes, and the first whispers of real pace are coming into focus.',
+      label: 'CARS ON TRACK TODAY',
+      primaryCopy: `${circuit} is open and the weekend is finally breathing for real.`,
+      secondaryCopy: 'Long runs, setup swings, and the first honest pace clues are about to hit the timing screens.',
     },
     SPRINT_DAY: {
       label: 'SPRINT DAY',
@@ -99,9 +112,14 @@ function getCopyForPhase(phase: RaceWeekPhase, race: RaceWeekend): Pick<RaceWeek
       secondaryCopy: 'The margins shrink, the kerbs get louder, and one clean lap can rewrite the story.',
     },
     RACE_DAY: {
-      label: 'RACE DAY',
+      label: 'LIGHTS OUT TODAY',
       primaryCopy: 'Lights out is only hours away.',
       secondaryCopy: 'Now the strategy calls, tyre life, and first-lap nerve really start to matter.',
+    },
+    WEEKEND_COMPLETE: {
+      label: 'RACE WEEKEND COMPLETE',
+      primaryCopy: `${location} has had its say and the points are in the books.`,
+      secondaryCopy: 'Now the paddock resets, the stories settle, and the next weekend starts to take shape.',
     },
   };
 
@@ -122,10 +140,25 @@ export function findPreviousRaceWeekend(weekends: RaceWeekend[], nextRace: NextR
   return nextRaceIndex > 0 ? weekends[nextRaceIndex - 1] : null;
 }
 
-export function deriveRaceWeekExperience(nextRace: NextRaceInfo | null, timezone: string): RaceWeekExperience | null {
+export function deriveRaceWeekExperience(nextRace: NextRaceInfo | null, previousRace: RaceWeekend | null, timezone: string): RaceWeekExperience | null {
+  if (!nextRace && !previousRace) return null;
+
+  if (previousRace && wasWeekendCompletedRecently(previousRace)) {
+    const copy = getCopyForPhase('WEEKEND_COMPLETE', previousRace);
+
+    return {
+      phase: 'WEEKEND_COMPLETE',
+      label: copy.label,
+      primaryCopy: copy.primaryCopy,
+      secondaryCopy: copy.secondaryCopy,
+      nextMoment: nextRace ? `Next up: ${nextRace.race.meeting.meeting_name}` : 'The next round will appear as soon as the calendar updates.',
+    };
+  }
+
   if (!nextRace) return null;
 
-  const phase = getTodayPhase(nextRace.allSessions, timezone) || 'RACE_WEEK';
+  const todayPhase = getTodayPhase(nextRace.allSessions, timezone);
+  const phase = todayPhase || 'RACE_WEEK';
   const copy = getCopyForPhase(phase, nextRace.race);
   const nextMoment = nextRace.nextSession
     ? `Next up: ${getSessionDisplayName(nextRace.nextSession)}`

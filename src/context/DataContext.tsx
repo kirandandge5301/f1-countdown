@@ -1,21 +1,27 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { RACES as FALLBACK_RACES } from '@/data/races';
-import { DRIVERS_STANDINGS as FALLBACK_DRIVERS, CONSTRUCTORS_STANDINGS as FALLBACK_CONSTRUCTORS } from '@/data/standings';
 import {
   findNextRace,
-  fetchRaceWeekends,
+  fetchPreferredRaceWeekends,
   fetchEnrichedDriverStandings,
   fetchEnrichedConstructorStandings,
   type EnrichedConstructorStanding,
   type EnrichedDriverStanding,
   type NextRaceInfo,
+  type PreferredRaceWeekendsResult,
   type RaceWeekend,
   type Session,
+  type Meeting,
+  VERIFIED_FALLBACK_YEAR,
 } from '@/services/openf1';
 import { deriveRaceWeekExperience, findPreviousRaceWeekend, type RaceWeekExperience } from '@/services/raceExperience';
 import { fetchPreviousRaceRecap } from '@/services/recap';
 import type { PreviousRaceRecap } from '@/data/raceRecaps';
 import { useTimezone } from '@/context/TimezoneContext';
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 interface DataContextType {
   raceWeekends: RaceWeekend[];
@@ -25,6 +31,8 @@ interface DataContextType {
   previousRaceRecap: PreviousRaceRecap | null;
   driverStandings: EnrichedDriverStanding[];
   constructorStandings: EnrichedConstructorStanding[];
+  seasonYear: number;
+  totalRounds: number;
   loading: boolean;
   raceLoading: boolean;
   recapLoading: boolean;
@@ -40,11 +48,11 @@ const createFallbackWeekends = (): RaceWeekend[] =>
     meeting: {
       meeting_key: race.round,
       meeting_name: race.gp,
-      meeting_official_name: race.gp,
+      meeting_official_name: race.officialName || race.gp,
       location: race.city,
       country_key: race.round,
       country_code: race.country,
-      country_name: race.country,
+      country_name: race.countryName || race.country,
       country_flag: '',
       circuit_key: race.round,
       circuit_short_name: race.circuit,
@@ -54,13 +62,20 @@ const createFallbackWeekends = (): RaceWeekend[] =>
       gmt_offset: '+00:00:00',
       date_start: race.sessions.race,
       date_end: race.sessions.race,
-      year: 2026,
+      year: VERIFIED_FALLBACK_YEAR,
       is_cancelled: false,
-    },
+    } as Meeting,
     sessions: Object.entries(race.sessions || {}).map(([key, date], index) => ({
       session_key: race.round * 100 + index,
-      session_type: key,
-      session_name: key,
+      session_type: key === 'qualifying' || key === 'sprintQualifying' ? 'Qualifying' : key === 'sprint' || key === 'race' ? 'Race' : 'Practice',
+      session_name:
+        key === 'fp1' ? 'Practice 1' :
+        key === 'fp2' ? 'Practice 2' :
+        key === 'fp3' ? 'Practice 3' :
+        key === 'sprintQualifying' ? 'Sprint Qualifying' :
+        key === 'sprint' ? 'Sprint' :
+        key === 'qualifying' ? 'Qualifying' :
+        'Race',
       date_start: date,
       date_end: date,
       meeting_key: race.round,
@@ -68,10 +83,10 @@ const createFallbackWeekends = (): RaceWeekend[] =>
       circuit_short_name: race.circuit,
       country_key: race.round,
       country_code: race.country,
-      country_name: race.country,
+      country_name: race.countryName || race.country,
       location: race.city,
       gmt_offset: '+00:00:00',
-      year: 2026,
+      year: VERIFIED_FALLBACK_YEAR,
       is_cancelled: false,
     })) as Session[],
     isSprint: !!race.sprint,
@@ -83,17 +98,10 @@ const DataContext = createContext<DataContextType>({
   previousRace: null,
   raceWeekExperience: null,
   previousRaceRecap: null,
-  driverStandings: FALLBACK_DRIVERS.map((driver) => ({
-    ...driver,
-    driverNumber: 0,
-    headshotUrl: '',
-  })),
-  constructorStandings: FALLBACK_CONSTRUCTORS.map((team) => ({
-    ...team,
-    teamSecondaryColor: '#141414',
-    logoText: team.name.slice(0, 3).toUpperCase(),
-    base: 'Team',
-  })),
+  driverStandings: [],
+  constructorStandings: [],
+  seasonYear: VERIFIED_FALLBACK_YEAR,
+  totalRounds: 0,
   loading: true,
   raceLoading: true,
   recapLoading: true,
@@ -110,21 +118,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [previousRace, setPreviousRace] = useState<RaceWeekend | null>(null);
   const [raceWeekExperience, setRaceWeekExperience] = useState<RaceWeekExperience | null>(null);
   const [previousRaceRecap, setPreviousRaceRecap] = useState<PreviousRaceRecap | null>(null);
-  const [driverStandings, setDriverStandings] = useState<EnrichedDriverStanding[]>(
-    FALLBACK_DRIVERS.map((driver) => ({
-      ...driver,
-      driverNumber: 0,
-      headshotUrl: '',
-    })),
-  );
-  const [constructorStandings, setConstructorStandings] = useState<EnrichedConstructorStanding[]>(
-    FALLBACK_CONSTRUCTORS.map((team) => ({
-      ...team,
-      teamSecondaryColor: '#141414',
-      logoText: team.name.slice(0, 3).toUpperCase(),
-      base: 'Team',
-    })),
-  );
+  const [driverStandings, setDriverStandings] = useState<EnrichedDriverStanding[]>([]);
+  const [constructorStandings, setConstructorStandings] = useState<EnrichedConstructorStanding[]>([]);
+  const [seasonYear, setSeasonYear] = useState<number>(VERIFIED_FALLBACK_YEAR);
+  const [totalRounds, setTotalRounds] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [raceLoading, setRaceLoading] = useState(true);
   const [recapLoading, setRecapLoading] = useState(true);
@@ -139,36 +136,42 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setStandingsLoading(true);
 
     try {
-      let weekends = await fetchRaceWeekends();
-      const liveRaceData = weekends && weekends.length > 0;
+      const preferredRaceData: PreferredRaceWeekendsResult = await fetchPreferredRaceWeekends();
+      let weekends = preferredRaceData.weekends;
+      const liveRaceData = preferredRaceData.isLiveSeason && weekends.length > 0;
 
-      if (!liveRaceData) {
-        console.warn('OpenF1 API returned no races, using fallback calendar');
+      if (weekends.length === 0) {
+        console.warn('OpenF1 API returned no active season data, using verified local season archive');
         weekends = createFallbackWeekends();
+        setSeasonYear(VERIFIED_FALLBACK_YEAR);
+      } else {
+        setSeasonYear(preferredRaceData.seasonYear);
       }
 
       setHasLiveRaceData(liveRaceData);
       setRaceWeekends(weekends);
+      setTotalRounds(weekends.length);
       const nextRaceInfo = findNextRace(weekends);
       const previousRaceInfo = findPreviousRaceWeekend(weekends, nextRaceInfo);
 
       setNextRace(nextRaceInfo);
       setPreviousRace(previousRaceInfo);
-      setRaceWeekExperience(deriveRaceWeekExperience(nextRaceInfo, timezone));
+      setRaceWeekExperience(deriveRaceWeekExperience(nextRaceInfo, previousRaceInfo, timezone));
       setRaceLoading(false);
 
-      const [recapResult, driversResult, constructorsResult] = await Promise.allSettled([
-        fetchPreviousRaceRecap(previousRaceInfo?.meeting.meeting_name),
-        fetchEnrichedDriverStandings(),
-        fetchEnrichedConstructorStandings(),
-      ]);
+      const recapPromise = fetchPreviousRaceRecap({
+        seasonYear: weekends[0]?.meeting.year || preferredRaceData.seasonYear || VERIFIED_FALLBACK_YEAR,
+        raceName: previousRaceInfo?.meeting.meeting_name,
+        round: previousRaceInfo?.round,
+      });
 
-      const recap = recapResult.status === 'fulfilled' ? recapResult.value : null;
+      const recap = await recapPromise.catch(() => null);
       setPreviousRaceRecap(recap);
       setRecapLoading(false);
 
-      const drivers = driversResult.status === 'fulfilled' ? driversResult.value : [];
-      const constructors = constructorsResult.status === 'fulfilled' ? constructorsResult.value : [];
+      const drivers = await fetchEnrichedDriverStandings().catch(() => []);
+      await wait(450);
+      const constructors = await fetchEnrichedConstructorStandings().catch(() => []);
       const liveStandings = drivers.length > 0 && constructors.length > 0;
 
       setHasLiveStandings(liveStandings);
@@ -176,26 +179,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (drivers && drivers.length > 0) {
         setDriverStandings(drivers);
       } else {
-        setDriverStandings(
-          FALLBACK_DRIVERS.map((driver) => ({
-            ...driver,
-            driverNumber: 0,
-            headshotUrl: '',
-          })),
-        );
+        setDriverStandings([]);
       }
 
       if (constructors && constructors.length > 0) {
         setConstructorStandings(constructors);
       } else {
-        setConstructorStandings(
-          FALLBACK_CONSTRUCTORS.map((team) => ({
-            ...team,
-            teamSecondaryColor: '#141414',
-            logoText: team.name.slice(0, 3).toUpperCase(),
-            base: 'Team',
-          })),
-        );
+        setConstructorStandings([]);
       }
       setStandingsLoading(false);
     } catch (error) {
@@ -207,27 +197,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setHasLiveRaceData(false);
       setHasLiveStandings(false);
       setRaceWeekends(weekends);
+      setSeasonYear(VERIFIED_FALLBACK_YEAR);
+      setTotalRounds(weekends.length);
       setNextRace(nextRaceInfo);
       setPreviousRace(previousRaceInfo);
-      setRaceWeekExperience(deriveRaceWeekExperience(nextRaceInfo, timezone));
+      setRaceWeekExperience(deriveRaceWeekExperience(nextRaceInfo, previousRaceInfo, timezone));
       setRaceLoading(false);
-      setPreviousRaceRecap(previousRaceInfo ? await fetchPreviousRaceRecap(previousRaceInfo.meeting.meeting_name) : null);
+      setPreviousRaceRecap(previousRaceInfo ? await fetchPreviousRaceRecap({ seasonYear: VERIFIED_FALLBACK_YEAR, raceName: previousRaceInfo.meeting.meeting_name, round: previousRaceInfo.round }) : null);
       setRecapLoading(false);
-      setDriverStandings(
-        FALLBACK_DRIVERS.map((driver) => ({
-          ...driver,
-          driverNumber: 0,
-          headshotUrl: '',
-        })),
-      );
-      setConstructorStandings(
-        FALLBACK_CONSTRUCTORS.map((team) => ({
-          ...team,
-          teamSecondaryColor: '#141414',
-          logoText: team.name.slice(0, 3).toUpperCase(),
-          base: 'Team',
-        })),
-      );
+      setDriverStandings([]);
+      setConstructorStandings([]);
       setStandingsLoading(false);
     } finally {
       setLoading(false);
@@ -239,8 +218,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [loadData]);
 
   useEffect(() => {
-    setRaceWeekExperience(deriveRaceWeekExperience(nextRace, timezone));
-  }, [nextRace, timezone]);
+    setRaceWeekExperience(deriveRaceWeekExperience(nextRace, previousRace, timezone));
+  }, [nextRace, previousRace, timezone]);
 
   const refresh = () => loadData();
 
@@ -253,6 +232,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       previousRaceRecap,
       driverStandings,
       constructorStandings,
+      seasonYear,
+      totalRounds,
       loading,
       raceLoading,
       recapLoading,

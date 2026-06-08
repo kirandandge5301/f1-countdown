@@ -1,9 +1,12 @@
-import { RACES } from '@/data/races';
-
 export interface RecapDriver {
   name: string;
   team: string;
   code: string;
+}
+
+export interface RecapMovement {
+  driver: RecapDriver;
+  positionsGained: number;
 }
 
 export interface PreviousRaceRecap {
@@ -16,50 +19,86 @@ export interface PreviousRaceRecap {
   p3: RecapDriver;
   polePosition: RecapDriver;
   fastestLap: RecapDriver;
-  source: 'live' | 'seed';
+  biggestMover?: RecapMovement | null;
+  driverOfWeekend?: string | null;
+  momentOfRace?: string | null;
+  source: 'live' | 'verified';
 }
 
-const DRIVER_POOL: RecapDriver[] = [
-  { name: 'Max Verstappen', team: 'Red Bull Racing', code: 'VER' },
-  { name: 'Lando Norris', team: 'McLaren', code: 'NOR' },
-  { name: 'Charles Leclerc', team: 'Ferrari', code: 'LEC' },
-  { name: 'Oscar Piastri', team: 'McLaren', code: 'PIA' },
-  { name: 'Lewis Hamilton', team: 'Ferrari', code: 'HAM' },
-  { name: 'George Russell', team: 'Mercedes', code: 'RUS' },
-  { name: 'Andrea Kimi Antonelli', team: 'Mercedes', code: 'ANT' },
-  { name: 'Fernando Alonso', team: 'Aston Martin', code: 'ALO' },
-  { name: 'Alexander Albon', team: 'Williams', code: 'ALB' },
-  { name: 'Yuki Tsunoda', team: 'Racing Bulls', code: 'TSU' },
-];
-
-const PODIUM_PATTERNS = [
-  [0, 1, 2, 0, 1],
-  [1, 0, 3, 1, 2],
-  [2, 3, 0, 2, 0],
-  [3, 1, 5, 1, 3],
-  [0, 2, 4, 0, 5],
-  [1, 3, 2, 3, 1],
-  [5, 0, 1, 0, 5],
-  [2, 1, 0, 2, 3],
-];
-
-export const SEEDED_RACE_RECAPS: Record<string, PreviousRaceRecap> = Object.fromEntries(
-  RACES.map((race, index) => {
-    const pattern = PODIUM_PATTERNS[index % PODIUM_PATTERNS.length];
-
-    const recap: PreviousRaceRecap = {
-      round: race.round,
-      raceName: race.gp,
-      circuit: race.circuit,
-      raceDate: race.date,
-      winner: DRIVER_POOL[pattern[0]],
-      p2: DRIVER_POOL[pattern[1]],
-      p3: DRIVER_POOL[pattern[2]],
-      polePosition: DRIVER_POOL[pattern[3]],
-      fastestLap: DRIVER_POOL[pattern[4]],
-      source: 'seed',
-    };
-
-    return [race.gp, recap];
-  })
-);
+export const VERIFIED_RACE_RECAPS: Record<string, PreviousRaceRecap> = {
+  "Australian Grand Prix": {
+    round: 1,
+    raceName: "Australian Grand Prix",
+    circuit: "Albert Park Grand Prix Circuit",
+    raceDate: "2026-03-08",
+    winner: { name: 'George Russell', team: 'Mercedes', code: 'RUS' },
+    p2: { name: 'Andrea Kimi Antonelli', team: 'Mercedes', code: 'ANT' },
+    p3: { name: 'Charles Leclerc', team: 'Ferrari', code: 'LEC' },
+    polePosition: { name: 'George Russell', team: 'Mercedes', code: 'RUS' },
+    fastestLap: { name: 'Max Verstappen', team: 'Red Bull', code: 'VER' },
+    biggestMover: { driver: { name: 'Max Verstappen', team: 'Red Bull', code: 'VER' }, positionsGained: 14 },
+    driverOfWeekend: null,
+    momentOfRace: null,
+    source: 'verified',
+  },
+  "Chinese Grand Prix": {
+    round: 2,
+    raceName: "Chinese Grand Prix",
+    circuit: "Shanghai International Circuit",
+    raceDate: "2026-03-15",
+    winner: { name: 'Andrea Kimi Antonelli', team: 'Mercedes', code: 'ANT' },
+    p2: { name: 'George Russell', team: 'Mercedes', code: 'RUS' },
+    p3: { name: 'Lewis Hamilton', team: 'Ferrari', code: 'HAM' },
+    polePosition: { name: 'Andrea Kimi Antonelli', team: 'Mercedes', code: 'ANT' },
+    fastestLap: { name: 'Andrea Kimi Antonelli', team: 'Mercedes', code: 'ANT' },
+    biggestMover: { driver: { name: 'Carlos Sainz', team: 'Williams', code: 'SAI' }, positionsGained: 8 },
+    driverOfWeekend: null,
+    momentOfRace: null,
+    source: 'verified',
+  },
+  "Japanese Grand Prix": {
+    round: 3,
+    raceName: "Japanese Grand Prix",
+    circuit: "Suzuka Circuit",
+    raceDate: "2026-03-29",
+    winner: { name: 'Andrea Kimi Antonelli', team: 'Mercedes', code: 'ANT' },
+    p2: { name: 'Oscar Piastri', team: 'McLaren', code: 'PIA' },
+    p3: { name: 'Charles Leclerc', team: 'Ferrari', code: 'LEC' },
+    polePosition: { name: 'Andrea Kimi Antonelli', team: 'Mercedes', code: 'ANT' },
+    fastestLap: { name: 'Andrea Kimi Antonelli', team: 'Mercedes', code: 'ANT' },
+    biggestMover: { driver: { name: 'Liam Lawson', team: 'RB F1 Team', code: 'LAW' }, positionsGained: 5 },
+    driverOfWeekend: null,
+    momentOfRace: null,
+    source: 'verified',
+  },
+  "Miami Grand Prix": {
+    round: 4,
+    raceName: "Miami Grand Prix",
+    circuit: "Miami International Autodrome",
+    raceDate: "2026-05-03",
+    winner: { name: 'Andrea Kimi Antonelli', team: 'Mercedes', code: 'ANT' },
+    p2: { name: 'Lando Norris', team: 'McLaren', code: 'NOR' },
+    p3: { name: 'Oscar Piastri', team: 'McLaren', code: 'PIA' },
+    polePosition: { name: 'Andrea Kimi Antonelli', team: 'Mercedes', code: 'ANT' },
+    fastestLap: { name: 'Lando Norris', team: 'McLaren', code: 'NOR' },
+    biggestMover: { driver: { name: 'Gabriel Bortoleto', team: 'Audi', code: 'BOR' }, positionsGained: 9 },
+    driverOfWeekend: null,
+    momentOfRace: null,
+    source: 'verified',
+  },
+  "Canadian Grand Prix": {
+    round: 5,
+    raceName: "Canadian Grand Prix",
+    circuit: "Circuit Gilles Villeneuve",
+    raceDate: "2026-05-24",
+    winner: { name: 'Andrea Kimi Antonelli', team: 'Mercedes', code: 'ANT' },
+    p2: { name: 'Lewis Hamilton', team: 'Ferrari', code: 'HAM' },
+    p3: { name: 'Max Verstappen', team: 'Red Bull', code: 'VER' },
+    polePosition: { name: 'George Russell', team: 'Mercedes', code: 'RUS' },
+    fastestLap: { name: 'Andrea Kimi Antonelli', team: 'Mercedes', code: 'ANT' },
+    biggestMover: { driver: { name: 'Pierre Gasly', team: 'Alpine F1 Team', code: 'GAS' }, positionsGained: 6 },
+    driverOfWeekend: null,
+    momentOfRace: null,
+    source: 'verified',
+  },
+};

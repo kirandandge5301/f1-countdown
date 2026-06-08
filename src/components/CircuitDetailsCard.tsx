@@ -3,20 +3,22 @@ import type { CircuitInfo } from '@/data/circuitInfo';
 interface CircuitDetailsCardProps {
   meetingName: string;
   circuitName: string;
+  city: string;
+  country: string;
   circuitInfo: CircuitInfo | null;
   isVisible: boolean;
 }
 
 const detailItems = (circuitInfo: CircuitInfo | null) => [
-  { label: 'Circuit Length', value: circuitInfo?.length || 'TBC' },
-  { label: 'Laps', value: circuitInfo?.laps ? String(circuitInfo.laps) : 'TBC' },
-  { label: 'Race Distance', value: circuitInfo?.distance || 'TBC' },
-  { label: 'Lap Record', value: circuitInfo?.lapRecord || 'Still being confirmed' },
-  { label: 'First Grand Prix', value: circuitInfo?.firstGrandPrix ? String(circuitInfo.firstGrandPrix) : 'TBC' },
-  { label: 'DRS Zones', value: circuitInfo?.drsZones ? String(circuitInfo.drsZones) : 'TBC' },
+  { label: 'Circuit Length', value: circuitInfo?.length || 'Data currently unavailable' },
+  { label: 'Laps', value: circuitInfo?.laps || 'Data currently unavailable' },
+  { label: 'Race Distance', value: circuitInfo?.distance || 'Data currently unavailable' },
+  { label: 'Lap Record', value: circuitInfo?.lapRecord || 'Data currently unavailable' },
+  { label: 'First Grand Prix', value: circuitInfo?.firstGrandPrix || 'Data currently unavailable' },
+  { label: 'DRS Zones', value: circuitInfo?.drsZones || 'Data currently unavailable' },
 ];
 
-export default function CircuitDetailsCard({ meetingName, circuitName, circuitInfo, isVisible }: CircuitDetailsCardProps) {
+export default function CircuitDetailsCard({ meetingName, circuitName, city, country, circuitInfo, isVisible }: CircuitDetailsCardProps) {
   return (
     <div
       data-testid="next-race-circuit-card"
@@ -33,14 +35,17 @@ export default function CircuitDetailsCard({ meetingName, circuitName, circuitIn
             {circuitName}
           </h3>
           <p className="mt-3 max-w-2xl text-sm sm:text-base text-[var(--text-secondary)]">
-            Everything you need before lights out at {meetingName.replace(' Grand Prix', '')} — distance, lap count, record pace, and the shape of the circuit story.
+            Verified circuit reference for {meetingName.replace(' Grand Prix', '')} — venue facts, race distance, and the details that matter before lights out.
           </p>
         </div>
 
         <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] px-4 py-3">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">Fan Note</div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">Venue</div>
           <div className="mt-2 text-sm text-[var(--text-primary)] max-w-[280px]">
-            {circuitInfo?.fact || 'Track details will sharpen the picture as the weekend approaches.'}
+            {city}, {country}
+          </div>
+          <div className="mt-3 text-sm text-[var(--text-secondary)] max-w-[280px]">
+            {circuitInfo?.fact || 'Data currently unavailable'}
           </div>
         </div>
       </div>

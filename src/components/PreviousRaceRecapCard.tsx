@@ -1,5 +1,5 @@
 import { getConstructorBranding } from '@/data/constructorBranding';
-import type { PreviousRaceRecap } from '@/data/raceRecaps';
+import type { PreviousRaceRecap, RecapMovement } from '@/data/raceRecaps';
 
 interface PreviousRaceRecapCardProps {
   recap: PreviousRaceRecap;
@@ -14,7 +14,22 @@ const RECAP_ITEMS = [
   { key: 'fastestLap', label: 'Fastest Lap' },
 ] as const;
 
+const EXTRA_ITEMS = [
+  { key: 'biggestMover', label: 'Biggest Mover' },
+  { key: 'driverOfWeekend', label: 'Driver Of The Weekend' },
+  { key: 'momentOfRace', label: 'Moment Of The Race' },
+] as const;
+
 export default function PreviousRaceRecapCard({ recap, isVisible }: PreviousRaceRecapCardProps) {
+  const renderExtraValue = (key: (typeof EXTRA_ITEMS)[number]['key'], value: PreviousRaceRecap[(typeof EXTRA_ITEMS)[number]['key']]) => {
+    if (key === 'biggestMover') {
+      const mover = value as RecapMovement | null | undefined;
+      return mover ? `${mover.driver.name} gained ${mover.positionsGained} places` : 'Data currently unavailable';
+    }
+
+    return typeof value === 'string' && value ? value : 'Data currently unavailable';
+  };
+
   return (
     <div
       data-testid="previous-race-recap-card"
@@ -28,7 +43,7 @@ export default function PreviousRaceRecapCard({ recap, isVisible }: PreviousRace
             <span className="inline-flex items-center rounded-full border border-[#E10600]/20 bg-[#E10600]/10 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-[#E10600] uppercase">
               Previous Grand Prix
             </span>
-            <span className="text-xs text-[var(--text-tertiary)]">{recap.source === 'live' ? 'Live-backed recap' : 'Launch seed recap'}</span>
+            <span className="text-xs text-[var(--text-tertiary)]">{recap.source === 'live' ? 'Live-backed recap' : 'Verified season archive recap'}</span>
           </div>
           <h2 className="text-[clamp(30px,4.5vw,52px)] font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
             {recap.raceName}
@@ -80,6 +95,27 @@ export default function PreviousRaceRecapCard({ recap, isVisible }: PreviousRace
                   <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: branding.primary }} />
                   <span className="text-sm text-white/72">{driver.team}</span>
                 </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {EXTRA_ITEMS.map(({ key, label }, index) => {
+          const value = recap[key];
+
+          return (
+            <div
+              key={key}
+              className={`rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-primary)] p-5 ${
+                isVisible ? 'animate-fade-in-up' : 'opacity-0'
+              }`}
+              style={{ animationDelay: `${200 + index * 50}ms` }}
+            >
+              <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">{label}</div>
+              <div className="mt-3 text-base font-medium text-[var(--text-primary)] leading-relaxed">
+                {renderExtraValue(key, value)}
               </div>
             </div>
           );

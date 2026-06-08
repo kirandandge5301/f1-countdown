@@ -7,7 +7,19 @@ export default function PreviousRaceSection() {
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLElement>({ threshold: 0.12 });
 
   if (!recapLoading && !previousRaceRecap) {
-    return null;
+    return (
+      <section
+        ref={sectionRef}
+        id="previous-race"
+        className="px-[clamp(20px,5vw,64px)] pb-[clamp(60px,10vh,120px)] -mt-6 sm:-mt-10"
+      >
+        <div className="max-w-6xl mx-auto rounded-[32px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-6 sm:p-8">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">Previous Grand Prix</div>
+          <p className="mt-4 text-lg font-medium text-[var(--text-primary)]">Data currently unavailable.</p>
+          <p className="mt-2 text-[var(--text-secondary)]">Verified recap details will appear again as soon as a completed round is available.</p>
+        </div>
+      </section>
+    );
   }
 
   return (

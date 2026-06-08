@@ -1,6 +1,12 @@
-import { SEEDED_RACE_RECAPS, type PreviousRaceRecap, type RecapDriver } from '@/data/raceRecaps';
+import { VERIFIED_RACE_RECAPS, type PreviousRaceRecap, type RecapDriver } from '@/data/raceRecaps';
 
 const ERGAST_BASE = 'https://api.jolpi.ca/ergast/f1';
+
+interface PreviousRaceRecapRequest {
+  seasonYear: number;
+  raceName?: string;
+  round?: number;
+}
 
 interface ErgastRaceResultResponse {
   MRData?: {
@@ -15,6 +21,7 @@ interface ErgastRaceResultResponse {
         };
         Results?: Array<{
           position?: string;
+          grid?: string;
           Driver?: {
             code?: string;
             givenName?: string;
@@ -102,13 +109,16 @@ function extractLiveRecap(
   return {
     round: Number(resultRace.round || 0),
     raceName: resultRace.raceName,
-    circuit: resultRace.Circuit?.circuitName || 'Grand Prix Circuit',
+    circuit: resultRace.Circuit?.circuitName || resultRace.raceName,
     raceDate: resultRace.date,
     winner,
     p2,
     p3,
     polePosition,
     fastestLap,
+    biggestMover: null,
+    driverOfWeekend: null,
+    momentOfRace: null,
     source: 'live',
   };
 }
@@ -117,24 +127,58 @@ function normalizeName(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-export async function fetchPreviousRaceRecap(expectedRaceName?: string): Promise<PreviousRaceRecap | null> {
+function enrichBiggestMover(
+  recap: PreviousRaceRecap,
+  resultsResponse: ErgastRaceResultResponse | null,
+): PreviousRaceRecap {
+  const results = resultsResponse?.MRData?.RaceTable?.Races?.[0]?.Results || [];
+
+  const biggestMover = results
+    .map((entry) => ({
+      entry,
+      gain: Number(entry.position ? entry.grid || 0 : 0) - Number(entry.position || 0),
+    }))
+    .sort((a, b) => b.gain - a.gain)
+    .find((item) => item.gain > 0);
+
+  if (!biggestMover) {
+    return { ...recap, biggestMover: null };
+  }
+
+  const mover = toDriver(biggestMover.entry);
+
+  return {
+    ...recap,
+    biggestMover: mover ? { driver: mover, positionsGained: biggestMover.gain } : null,
+  };
+}
+
+export async function fetchPreviousRaceRecap({ seasonYear, raceName, round }: PreviousRaceRecapRequest): Promise<PreviousRaceRecap | null> {
+  const resultsEndpoint = round
+    ? `/${seasonYear}/${round}/results.json`
+    : `/${seasonYear}/last/results.json`;
+  const qualifyingEndpoint = round
+    ? `/${seasonYear}/${round}/qualifying.json`
+    : `/${seasonYear}/last/qualifying.json`;
+
   const [resultsResponse, qualifyingResponse] = await Promise.all([
-    fetchRecapJSON<ErgastRaceResultResponse>('/current/last/results.json'),
-    fetchRecapJSON<ErgastRaceResultResponse>('/current/last/qualifying.json'),
+    fetchRecapJSON<ErgastRaceResultResponse>(resultsEndpoint),
+    fetchRecapJSON<ErgastRaceResultResponse>(qualifyingEndpoint),
   ]);
 
   const liveRecap = extractLiveRecap(resultsResponse, qualifyingResponse);
+  const enrichedLiveRecap = liveRecap ? enrichBiggestMover(liveRecap, resultsResponse) : null;
 
   if (
-    liveRecap &&
-    (!expectedRaceName || normalizeName(liveRecap.raceName) === normalizeName(expectedRaceName))
+    enrichedLiveRecap &&
+    (!raceName || normalizeName(enrichedLiveRecap.raceName) === normalizeName(raceName))
   ) {
-    return liveRecap;
+    return enrichedLiveRecap;
   }
 
-  if (expectedRaceName && SEEDED_RACE_RECAPS[expectedRaceName]) {
-    return SEEDED_RACE_RECAPS[expectedRaceName];
+  if (seasonYear === 2026 && raceName && VERIFIED_RACE_RECAPS[raceName]) {
+    return VERIFIED_RACE_RECAPS[raceName];
   }
 
-  return liveRecap;
+  return null;
 }

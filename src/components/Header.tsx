@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Globe, ChevronDown, Sun, Moon, Menu, X } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimezone } from '@/context/TimezoneContext';
+import { useData } from '@/context/DataContext';
 import { TIMEZONE_OPTIONS } from '@/data/timezones';
 
 const NAV_LINKS = [
@@ -15,6 +16,7 @@ const NAV_LINKS = [
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const { timezone, timezoneLabel, setTimezone } = useTimezone();
+  const { seasonYear } = useData();
   const [tzOpen, setTzOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('next-race');
@@ -76,7 +78,7 @@ export default function Header() {
             <span className="w-2 h-2 rounded-full bg-[#E10600]" />
             <div className="flex items-center gap-1.5">
               <span className="text-[15px] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">GPCountdown</span>
-              <span className="text-[15px] text-[var(--text-secondary)]">2026</span>
+              <span className="text-[15px] text-[var(--text-secondary)]">{seasonYear}</span>
             </div>
           </button>
 

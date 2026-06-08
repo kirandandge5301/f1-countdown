@@ -6,7 +6,7 @@ import type { RaceWeekend, Session } from '@/services/openf1';
 
 export default function ScheduleSection() {
   const { timezone, timezoneLabel } = useTimezone();
-  const { raceWeekends, raceLoading, hasLiveRaceData } = useData();
+  const { raceWeekends, raceLoading, hasLiveRaceData, seasonYear, totalRounds } = useData();
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLElement>({ threshold: 0.1 });
 
   const now = new Date();
@@ -25,13 +25,13 @@ export default function ScheduleSection() {
         <div className="flex items-center gap-2 mb-4">
           <span className="w-1.5 h-1.5 rounded-full bg-[#E10600]" />
           <span className="text-[11px] font-medium tracking-[0.2em] text-[#E10600] uppercase">
-            FULL SEASON • 24 ROUNDS
+            FULL SEASON • {totalRounds} ROUNDS
           </span>
         </div>
 
         {/* Heading */}
         <h2 className="text-[clamp(32px,4vw,56px)] font-bold text-[var(--text-primary)] tracking-[-0.02em] leading-tight mb-4">
-          2026 Calendar.
+          {seasonYear} Calendar.
         </h2>
 
         <p className="text-base text-[var(--text-secondary)] max-w-[480px] mb-10">
@@ -40,7 +40,7 @@ export default function ScheduleSection() {
 
         {!hasLiveRaceData && !raceLoading && (
           <div className="mb-8 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-secondary)]">
-            Live schedule data is resting for the moment, so GPCountdown is showing the built-in season calendar.
+            Live schedule data is currently unavailable, so GPCountdown is showing the verified {seasonYear} archive.
           </div>
         )}
 

@@ -1,17 +1,17 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { detectUserTimezone, getTimezoneOffsetLabel, formatTimeInZone, formatDateInZone } from '@/data/timezones';
+import { detectUserTimezone, getTimezoneDisplayLabel, formatTimeInZone, formatDateInZone } from '@/data/timezones';
 
 interface TimezoneContextType {
   timezone: string;
-  timezoneLabel: string;        // e.g. "Mumbai (GMT+5:30)"
+  timezoneLabel: string;
   setTimezone: (tz: string) => void;
   formatTime: (utcString: string) => string;
   formatDate: (utcString: string) => string;
 }
 
 const TimezoneContext = createContext<TimezoneContextType>({
-  timezone: 'Asia/Kolkata',
-  timezoneLabel: 'Mumbai (GMT+5:30)',
+  timezone: 'UTC',
+  timezoneLabel: 'UTC',
   setTimezone: () => {},
   formatTime: () => '--:--',
   formatDate: () => '---'
@@ -27,16 +27,13 @@ export function TimezoneProvider({ children }: { children: ReactNode }) {
       const detected = detectUserTimezone();
       return detected;
     }
-    return 'Asia/Kolkata';
+    return 'UTC';
   });
 
-  const [timezoneLabel, setTimezoneLabel] = useState<string>('Mumbai (GMT+5:30)');
+  const [timezoneLabel, setTimezoneLabel] = useState<string>('UTC');
 
   useEffect(() => {
-    const label = getTimezoneOffsetLabel(timezone);
-    // Make it more user-friendly: City (GMT Offset)
-    const city = timezone.split('/').pop()?.replace(/_/g, ' ') || 'Local';
-    setTimezoneLabel(`${city} (${label})`);
+    setTimezoneLabel(getTimezoneDisplayLabel(timezone));
   }, [timezone]);
 
   useEffect(() => {

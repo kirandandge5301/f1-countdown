@@ -44,7 +44,7 @@ export default function StandingsSection() {
           </div>
 
           <div className="rounded-full border border-[var(--border-subtle)] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
-            {hasLiveStandings ? 'OpenF1 standings active' : 'Fallback standings active'}
+            {hasLiveStandings ? 'OpenF1 standings active' : 'Standings feed unavailable'}
           </div>
         </div>
 
@@ -79,6 +79,11 @@ export default function StandingsSection() {
             {[...Array(8)].map((_, i) => (
               <div key={i} className="h-20 rounded-2xl bg-[var(--bg-surface)] animate-pulse" />
             ))}
+          </div>
+        ) : !hasLiveStandings || (driverStandings.length === 0 && constructorStandings.length === 0) ? (
+          <div className="rounded-[28px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-8 text-center">
+            <p className="text-lg font-medium text-[var(--text-primary)]">Standings currently unavailable.</p>
+            <p className="mt-3 text-[var(--text-secondary)]">GPCountdown will publish the championship tables again as soon as OpenF1 returns a verified update.</p>
           </div>
         ) : (
           <>
