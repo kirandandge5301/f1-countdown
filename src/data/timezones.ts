@@ -9,7 +9,7 @@ export const TIMEZONE_OPTIONS: TimezoneOption[] = [
   { label: 'Central Europe', value: 'Europe/Paris' },
   { label: 'New York', value: 'America/New_York' },
   { label: 'Los Angeles', value: 'America/Los_Angeles' },
-  { label: 'India', value: 'Asia/Kolkata' },
+  { label: 'Mumbai (IST)', value: 'Asia/Kolkata' },
   { label: 'Dubai', value: 'Asia/Dubai' },
   { label: 'Singapore', value: 'Asia/Singapore' },
   { label: 'Tokyo', value: 'Asia/Tokyo' },
@@ -17,13 +17,18 @@ export const TIMEZONE_OPTIONS: TimezoneOption[] = [
   { label: 'São Paulo', value: 'America/Sao_Paulo' }
 ];
 
+const TIMEZONE_CANONICAL_MAP: Record<string, string> = {
+  'Asia/Calcutta': 'Asia/Kolkata',
+};
+
 const TIMEZONE_DISPLAY_MAP: Record<string, string> = {
   UTC: 'UTC',
   'Europe/London': 'United Kingdom',
   'Europe/Paris': 'Central Europe',
   'America/New_York': 'New York',
   'America/Los_Angeles': 'Los Angeles',
-  'Asia/Kolkata': 'India',
+  'Asia/Kolkata': 'Mumbai',
+  'Asia/Calcutta': 'Mumbai',
   'Asia/Dubai': 'Dubai',
   'Asia/Singapore': 'Singapore',
   'Asia/Tokyo': 'Tokyo',
@@ -34,7 +39,12 @@ const TIMEZONE_DISPLAY_MAP: Record<string, string> = {
 const TIMEZONE_SHORT_LABELS: Record<string, string> = {
   UTC: 'UTC',
   'Asia/Kolkata': 'IST',
+  'Asia/Calcutta': 'IST',
 };
+
+export function canonicalizeTimezone(timezone: string): string {
+  return TIMEZONE_CANONICAL_MAP[timezone] || timezone;
+}
 
 export function getTimezoneShortCode(timezone: string): string {
   try {
@@ -50,8 +60,9 @@ export function getTimezoneShortCode(timezone: string): string {
 }
 
 export function getTimezoneDisplayLabel(timezone: string): string {
-  const prefix = TIMEZONE_DISPLAY_MAP[timezone] || timezone.split('/').pop()?.replace(/_/g, ' ') || 'User Timezone';
-  const shortCode = TIMEZONE_SHORT_LABELS[timezone] || getTimezoneShortCode(timezone);
+  const normalizedTimezone = canonicalizeTimezone(timezone);
+  const prefix = TIMEZONE_DISPLAY_MAP[normalizedTimezone] || normalizedTimezone.split('/').pop()?.replace(/_/g, ' ') || 'User Timezone';
+  const shortCode = TIMEZONE_SHORT_LABELS[normalizedTimezone] || getTimezoneShortCode(normalizedTimezone);
 
   return prefix === shortCode ? prefix : `${prefix} (${shortCode})`;
 }
@@ -73,7 +84,7 @@ export function getTimezoneOffsetLabel(timezone: string): string {
 
 export function detectUserTimezone(): string {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return canonicalizeTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
   } catch {
     return 'UTC';
   }
@@ -83,7 +94,7 @@ export function formatTimeInZone(utcString: string, timezone: string): string {
   try {
     const date = new Date(utcString);
     return date.toLocaleTimeString('en-US', {
-      timeZone: timezone,
+      timeZone: canonicalizeTimezone(timezone),
       hour12: false,
       hour: '2-digit',
       minute: '2-digit'
@@ -97,7 +108,7 @@ export function formatDateInZone(utcString: string, timezone: string): string {
   try {
     const date = new Date(utcString);
     return date.toLocaleDateString('en-US', {
-      timeZone: timezone,
+      timeZone: canonicalizeTimezone(timezone),
       weekday: 'short',
       day: '2-digit',
       month: 'short'
@@ -111,7 +122,7 @@ export function formatDateTimeInZone(utcString: string, timezone: string): strin
   try {
     const date = new Date(utcString);
     return date.toLocaleString('en-US', {
-      timeZone: timezone,
+      timeZone: canonicalizeTimezone(timezone),
       weekday: 'short',
       day: '2-digit',
       month: 'short',
@@ -129,7 +140,7 @@ export function formatRaceTimeInZone(utcTime: string, date: string, timezone: st
     const dateTimeString = `${date}T${utcTime}:00Z`;
     const d = new Date(dateTimeString);
     return d.toLocaleTimeString('en-US', {
-      timeZone: timezone,
+      timeZone: canonicalizeTimezone(timezone),
       hour12: false,
       hour: '2-digit',
       minute: '2-digit'

@@ -41,6 +41,8 @@ Do not install new dependencies unless absolutely necessary.
 - Timezone labels upgraded to professional labels like `India (IST)` and shared timezone logic is aligned across countdown, schedule, session cards, and race-week messaging
 - Race-week messaging now supports race week, cars on track today, sprint day, qualifying day, lights out today, and race weekend complete based on real session timing
 - Preview host configuration remains fixed for Emergent preview domains and build is verified successfully
+- Final brand polish applied: hero branding line now shows `GPCountdown` over `Every Second Matters.` and footer branding matches
+- Timezone alias handling now canonicalizes `Asia/Calcutta` to `Asia/Kolkata`, with user-facing display refined to `Mumbai (IST)`
 
 ## Prioritized Backlog
 

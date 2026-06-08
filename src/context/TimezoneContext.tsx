@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { detectUserTimezone, getTimezoneDisplayLabel, formatTimeInZone, formatDateInZone } from '@/data/timezones';
+import { detectUserTimezone, getTimezoneDisplayLabel, formatTimeInZone, formatDateInZone, canonicalizeTimezone } from '@/data/timezones';
 
 interface TimezoneContextType {
   timezone: string;
@@ -21,7 +21,7 @@ export function TimezoneProvider({ children }: { children: ReactNode }) {
   const [timezone, setTimezoneState] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('gpcountdown-tz');
-      if (saved) return saved;
+      if (saved) return canonicalizeTimezone(saved);
       
       // Auto-detect user's real local timezone
       const detected = detectUserTimezone();
@@ -37,11 +37,11 @@ export function TimezoneProvider({ children }: { children: ReactNode }) {
   }, [timezone]);
 
   useEffect(() => {
-    localStorage.setItem('gpcountdown-tz', timezone);
+    localStorage.setItem('gpcountdown-tz', canonicalizeTimezone(timezone));
   }, [timezone]);
 
   const setTimezone = useCallback((tz: string) => {
-    setTimezoneState(tz);
+    setTimezoneState(canonicalizeTimezone(tz));
   }, []);
 
   const formatTime = useCallback((utcString: string) => {

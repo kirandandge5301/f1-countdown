@@ -130,7 +130,10 @@ export default function NextRaceSection() {
               <CountdownDisplay targetTime={nextSessionTime} size="hero" />
             </div>
 
-            <div className="mb-12 text-center">
+            <div className="mb-12 text-center space-y-2">
+              <p className="text-sm sm:text-base font-medium tracking-[-0.02em] text-[var(--text-primary)]">
+                GPCountdown
+              </p>
               <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-[var(--text-tertiary)]">
                 Every Second Matters.
               </p>
