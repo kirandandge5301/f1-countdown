@@ -10,12 +10,12 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3000,
-    allowedHosts: ['.emergentagent.com', '.preview.emergentagent.com', 'localhost', '127.0.0.1'],
+    allowedHosts: ['.emergentagent.com', '.preview.emergentagent.com', '.preview.emergentcf.cloud', 'localhost', '127.0.0.1'],
   },
   preview: {
     host: '0.0.0.0',
     port: 3000,
-    allowedHosts: ['.emergentagent.com', '.preview.emergentagent.com', 'localhost', '127.0.0.1'],
+    allowedHosts: ['.emergentagent.com', '.preview.emergentagent.com', '.preview.emergentcf.cloud', 'localhost', '127.0.0.1'],
   },
   resolve: {
     alias: {
