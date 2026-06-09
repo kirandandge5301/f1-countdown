@@ -5,13 +5,14 @@ import CountdownDisplay from '@/components/CountdownDisplay';
 import CircuitDetailsCard from '@/components/CircuitDetailsCard';
 import SessionCard from '@/components/SessionCard';
 import RaceInsight from '@/components/RaceInsight';
+import PremiumSharePanel from '@/components/PremiumSharePanel';
 import { getSessionDisplayName } from '@/services/openf1';
 import type { Session } from '@/services/openf1';
 import { CIRCUIT_INFO } from '@/data/circuitInfo';
 import { Flag, Flame } from 'lucide-react';
 
 export default function NextRaceSection() {
-  const { timezoneLabel } = useTimezone();
+  const { timezone, timezoneLabel } = useTimezone();
   const { nextRace, raceWeekExperience, raceLoading, hasLiveRaceData, totalRounds } = useData();
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLDivElement>({ threshold: 0.1 });
 
@@ -129,6 +130,13 @@ export default function NextRaceSection() {
             <div className="mb-12 md:mb-16 flex justify-center">
               <CountdownDisplay targetTime={nextSessionTime} size="hero" />
             </div>
+
+            <PremiumSharePanel
+              nextRace={nextRace}
+              raceWeekExperience={raceWeekExperience}
+              timezone={timezone}
+              timezoneLabel={timezoneLabel}
+            />
 
             <div className="mb-12 text-center space-y-2">
               <p className="text-sm sm:text-base font-medium tracking-[-0.02em] text-[var(--text-primary)]">
