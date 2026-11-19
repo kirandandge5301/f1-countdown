@@ -13,7 +13,17 @@ const POSITION_COLORS: Record<number, string> = {
 export default function StandingsSection() {
   const [activeTab, setActiveTab] = useState<Tab>('drivers');
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLElement>({ threshold: 0.1 });
-  const { driverStandings, constructorStandings, loading } = useData();
+  const {
+    driverStandings,
+    constructorStandings,
+    loading,
+    standingsLoading,
+    standingsError,
+    standingsUpdatedAt,
+    standingsRound,
+    refreshStandings
+  } = useData();
+  const isLoading = loading || standingsLoading;
 
   return (
     <section
@@ -59,11 +69,47 @@ export default function StandingsSection() {
           </button>
         </div>
 
-        {loading ? (
+        {/* Last updated */}
+        {!isLoading && !standingsError && standingsUpdatedAt && (
+          <p className="-mt-4 mb-6 text-xs text-[var(--text-tertiary)]">
+            Last updated{' '}
+            {standingsUpdatedAt.toLocaleString(undefined, {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+            {standingsRound ? ` · After Round ${standingsRound}` : ''}
+          </p>
+        )}
+
+        {isLoading ? (
           <div className="space-y-4 py-8">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="h-20 rounded-2xl bg-[var(--bg-surface)] animate-pulse" />
             ))}
+          </div>
+        ) : standingsError ? (
+          <div
+            role="alert"
+            className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl p-8 text-center"
+          >
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E10600]" />
+              <span className="font-semibold text-[17px] text-[var(--text-primary)]">
+                {standingsError}
+              </span>
+            </div>
+            <p className="text-sm text-[var(--text-secondary)] mb-6">
+              The standings service didn't respond. Please try again in a moment.
+            </p>
+            <button
+              onClick={() => refreshStandings()}
+              className="px-6 py-3 rounded-lg text-sm font-medium bg-[#E10600] text-white transition-all duration-200 hover:opacity-90"
+            >
+              Retry
+            </button>
           </div>
         ) : (
           <>

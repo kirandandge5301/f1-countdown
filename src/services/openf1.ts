@@ -4,9 +4,8 @@
  * Base URL: https://api.openf1.org/v1/
  */
 
-import { DRIVERS_STANDINGS as FALLBACK_DRIVERS, CONSTRUCTORS_STANDINGS as FALLBACK_CONSTRUCTORS } from '@/data/standings';
-
 const API_BASE = 'https://api.openf1.org/v1';
+const JOLPICA_BASE = 'https://api.jolpi.ca/ergast/f1/current';
 const CACHE_DURATION = 60000; // 60 seconds
 
 // ======= TYPES =======
@@ -48,26 +47,6 @@ export interface Session {
   gmt_offset: string;
   year: number;
   is_cancelled: boolean;
-}
-
-export interface DriverChampEntry {
-  meeting_key: number;
-  session_key: number;
-  driver_number: number;
-  position_start: number | null;
-  position_current: number;
-  points_start: number | null;
-  points_current: number;
-}
-
-export interface TeamChampEntry {
-  meeting_key: number;
-  session_key: number;
-  team_name: string;
-  position_start: number | null;
-  position_current: number;
-  points_start: number | null;
-  points_current: number;
 }
 
 export interface DriverInfo {
@@ -210,53 +189,6 @@ export async function fetchDrivers(): Promise<DriverInfo[]> {
   return [];
 }
 
-// ======= CHAMPIONSHIP STANDINGS =======
-
-export async function fetchDriverChampionship(sessionKey?: number): Promise<DriverChampEntry[] | null> {
-  const cacheKey = `driver_champ_${sessionKey || 'latest'}`;
-  const cached = getCached<DriverChampEntry[]>(cacheKey);
-  if (cached) return cached;
-
-  const endpoint = sessionKey
-    ? `/championship_drivers?session_key=${sessionKey}`
-    : `/championship_drivers`;
-  const data = await fetchJSON<DriverChampEntry[]>(endpoint);
-  if (data) {
-    // If no session_key, get entries with the highest session_key (most recent)
-    if (!sessionKey && data.length > 0) {
-      const maxSessionKey = Math.max(...data.map(d => d.session_key));
-      const latest = data.filter(d => d.session_key === maxSessionKey);
-      setCache(cacheKey, latest);
-      return latest;
-    }
-    setCache(cacheKey, data);
-    return data;
-  }
-  return null;
-}
-
-export async function fetchTeamChampionship(sessionKey?: number): Promise<TeamChampEntry[] | null> {
-  const cacheKey = `team_champ_${sessionKey || 'latest'}`;
-  const cached = getCached<TeamChampEntry[]>(cacheKey);
-  if (cached) return cached;
-
-  const endpoint = sessionKey
-    ? `/championship_teams?session_key=${sessionKey}`
-    : `/championship_teams`;
-  const data = await fetchJSON<TeamChampEntry[]>(endpoint);
-  if (data) {
-    if (!sessionKey && data.length > 0) {
-      const maxSessionKey = Math.max(...data.map(d => d.session_key));
-      const latest = data.filter(d => d.session_key === maxSessionKey);
-      setCache(cacheKey, latest);
-      return latest;
-    }
-    setCache(cacheKey, data);
-    return data;
-  }
-  return null;
-}
-
 // ======= COMBINED DATA =======
 
 export async function fetchRaceWeekends(year: number = 2026): Promise<RaceWeekend[]> {
@@ -352,6 +284,94 @@ export function getSessionDisplayName(session: Session): string {
   return name;
 }
 
+// ======= CHAMPIONSHIP STANDINGS (Jolpica / Ergast) =======
+// Standings come from Jolpica. These functions THROW on any failure so the UI
+// can show an error state instead of stale or fallback numbers.
+
+interface JolpicaStandingsTable<K extends string, T> {
+  MRData: {
+    StandingsTable: {
+      season: string;
+      round: string;
+      StandingsLists: Array<{ season: string; round: string } & Record<K, T[]>>;
+    };
+  };
+}
+
+interface JolpicaDriverStanding {
+  position?: string;
+  positionText: string;
+  points: string;
+  wins: string;
+  Driver: {
+    driverId: string;
+    permanentNumber?: string;
+    code?: string;
+    givenName: string;
+    familyName: string;
+  };
+  Constructors: Array<{ constructorId: string; name: string }>;
+}
+
+interface JolpicaConstructorStanding {
+  position?: string;
+  positionText: string;
+  points: string;
+  wins: string;
+  Constructor: { constructorId: string; name: string };
+}
+
+export interface StandingsResult<T> {
+  standings: T[];
+  season: number;
+  round: number;
+}
+
+// Keyed by Jolpica constructorId (stable across sponsor/name changes)
+const TEAM_COLORS: Record<string, string> = {
+  red_bull: '#1E41FF',
+  mclaren: '#FF8000',
+  ferrari: '#DC0000',
+  mercedes: '#27F4D2',
+  aston_martin: '#006F62',
+  williams: '#64C4FF',
+  rb: '#6692FF',
+  haas: '#B6BABD',
+  alpine: '#FF87BC',
+  sauber: '#52E252',
+  audi: '#BB0A30',
+  cadillac: '#C9B37E',
+};
+
+function teamColor(constructorId: string | undefined): string {
+  return (constructorId && TEAM_COLORS[constructorId]) || '#999999';
+}
+
+async function fetchJolpicaStandings<K extends string, T>(
+  path: string,
+  listKey: K
+): Promise<{ entries: T[]; season: number; round: number }> {
+  const resp = await fetch(`${JOLPICA_BASE}/${path}`, {
+    headers: { 'Accept': 'application/json' },
+    cache: 'no-store',
+  });
+  if (!resp.ok) {
+    throw new Error(`Jolpica API error: ${resp.status} for ${path}`);
+  }
+  const json = (await resp.json()) as JolpicaStandingsTable<K, T>;
+  const table = json?.MRData?.StandingsTable;
+  const list = table?.StandingsLists?.[0];
+  const entries = list?.[listKey];
+  if (!table || !list || !Array.isArray(entries) || entries.length === 0) {
+    throw new Error(`Jolpica API returned no standings for ${path}`);
+  }
+  return {
+    entries,
+    season: Number(list.season ?? table.season),
+    round: Number(list.round ?? table.round),
+  };
+}
+
 // ======= STANDINGS WITH DRIVER INFO =======
 
 export interface EnrichedDriverStanding {
@@ -374,80 +394,49 @@ export interface EnrichedConstructorStanding {
   wins: number;
 }
 
-export async function fetchEnrichedDriverStandings(): Promise<EnrichedDriverStanding[]> {
-  const [champEntries, driverInfos] = await Promise.all([
-    fetchDriverChampionship(),
-    fetchDrivers()
+export async function fetchEnrichedDriverStandings(): Promise<StandingsResult<EnrichedDriverStanding>> {
+  // Headshots are a best-effort add-on from OpenF1; failure must never block standings.
+  const [standings, driverInfos] = await Promise.all([
+    fetchJolpicaStandings<'DriverStandings', JolpicaDriverStanding>('driverstandings.json', 'DriverStandings'),
+    fetchDrivers().catch(() => [] as DriverInfo[]),
   ]);
 
-  if (!champEntries || champEntries.length === 0) {
-    // Return fallback
-   return FALLBACK_DRIVERS.map(d => ({
-  position: d.position,
-  firstName: d.firstName,
-  lastName: d.lastName,
-  team: d.team,
-  teamColor: d.teamColor,
-  points: d.points,
-  wins: d.wins,
-  driverNumber: 0,
-  headshotUrl: ''
-}));
-  }
+  const rows = standings.entries.map((entry, idx) => {
+    const driverNumber = Number(entry.Driver.permanentNumber) || 0;
+    const team = entry.Constructors[entry.Constructors.length - 1];
+    const info = driverNumber ? driverInfos.find(d => d.driver_number === driverNumber) : undefined;
 
-  // Sort by position
-  const sorted = [...champEntries].sort((a, b) => a.position_current - b.position_current);
+    return {
+      position: Number(entry.position) || idx + 1,
+      firstName: entry.Driver.givenName,
+      lastName: entry.Driver.familyName,
+      team: team?.name || 'Unknown',
+      teamColor: teamColor(team?.constructorId),
+      points: Number(entry.points) || 0,
+      wins: Number(entry.wins) || 0,
+      driverNumber,
+      headshotUrl: info?.headshot_url || '',
+    };
+  });
 
-  return sorted.map(entry => {
-  const info = driverInfos.find(
-    d => d.driver_number === entry.driver_number
-  );
-
-  return {
-    position: entry.position_current,
-    firstName: info?.first_name || 'Driver',
-    lastName: info?.last_name || `#${entry.driver_number}`,
-    team: info?.team_name || 'Unknown',
-    teamColor: info?.team_colour || '#999999',
-    points: Math.round(entry.points_current),
-    wins: 0,
-    driverNumber: entry.driver_number,
-    headshotUrl: info?.headshot_url || ''
-  };
-});
+  return { standings: rows, season: standings.season, round: standings.round };
 }
 
-export async function fetchEnrichedConstructorStandings(): Promise<EnrichedConstructorStanding[]> {
-  const champEntries = await fetchTeamChampionship();
+export async function fetchEnrichedConstructorStandings(): Promise<StandingsResult<EnrichedConstructorStanding>> {
+  const standings = await fetchJolpicaStandings<'ConstructorStandings', JolpicaConstructorStanding>(
+    'constructorstandings.json',
+    'ConstructorStandings'
+  );
 
-  if (!champEntries || champEntries.length === 0) {
-    return FALLBACK_CONSTRUCTORS;
-  }
+  const rows = standings.entries.map((entry, idx) => ({
+    position: Number(entry.position) || idx + 1,
+    name: entry.Constructor.name,
+    teamColor: teamColor(entry.Constructor.constructorId),
+    points: Number(entry.points) || 0,
+    wins: Number(entry.wins) || 0,
+  }));
 
-  const sorted = [...champEntries].sort((a, b) => a.position_current - b.position_current);
-
-  // Map team names to approximate colors
-  const teamColorMap: Record<string, string> = {
-    'Red Bull Racing': '#1E41FF',
-    'McLaren': '#FF8000',
-    'Ferrari': '#DC0000',
-    'Mercedes': '#27F4D2',
-    'Aston Martin': '#006F62',
-    'Williams': '#64C4FF',
-    'RB': '#6692FF',
-    'Racing Bulls': '#6692FF',
-    'Haas F1 Team': '#B6BABD',
-    'Alpine': '#FF87BC',
-    'Kick Sauber': '#52E252',
-  };
-
-  return sorted.map(entry => ({
-  position: entry.position_current,
-  name: entry.team_name,
-  teamColor: teamColorMap[entry.team_name] || '#999999',
-  points: Math.round(entry.points_current),
-  wins: 0
-}));
+  return { standings: rows, season: standings.season, round: standings.round };
 }
 
 // ======= FORCE REFRESH =======

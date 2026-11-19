@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { RACES as FALLBACK_RACES } from '@/data/races';
-import { DRIVERS_STANDINGS as FALLBACK_DRIVERS, CONSTRUCTORS_STANDINGS as FALLBACK_CONSTRUCTORS } from '@/data/standings';
 import {
   findNextRace,
   fetchRaceWeekends,
@@ -13,20 +12,26 @@ const DataContext = createContext<any>({
   nextRace: null,
   driverStandings: [],
   constructorStandings: [],
+  standingsError: null,
+  standingsUpdatedAt: null,
+  standingsRound: null,
+  standingsLoading: false,
   loading: true,
   refresh: () => {},
+  refreshStandings: () => {},
 });
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const [raceWeekends, setRaceWeekends] = useState<any[]>([]);
   const [nextRace, setNextRace] = useState<any>(null);
-  const [driverStandings, setDriverStandings] = useState<any[]>(FALLBACK_DRIVERS);
-  const [constructorStandings, setConstructorStandings] = useState<any[]>(FALLBACK_CONSTRUCTORS);
+  const [driverStandings, setDriverStandings] = useState<any[]>([]);
+  const [constructorStandings, setConstructorStandings] = useState<any[]>([]);
+  const [standingsError, setStandingsError] = useState<string | null>(null);
+  const [standingsUpdatedAt, setStandingsUpdatedAt] = useState<Date | null>(null);
+  const [standingsRound, setStandingsRound] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-
+  const loadCalendar = useCallback(async () => {
     try {
       // Fetch live race calendar from OpenF1 API
       let weekends = await fetchRaceWeekends();
@@ -52,29 +57,42 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       setRaceWeekends(weekends);
       setNextRace(findNextRace(weekends as any));
-
-      // Fetch live championship standings from OpenF1
-      const drivers = await fetchEnrichedDriverStandings();
-      if (drivers && drivers.length > 0) {
-        setDriverStandings(drivers);
-      } else {
-        setDriverStandings(FALLBACK_DRIVERS);
-      }
-
-      const constructors = await fetchEnrichedConstructorStandings();
-      if (constructors && constructors.length > 0) {
-        setConstructorStandings(constructors);
-      } else {
-        setConstructorStandings(FALLBACK_CONSTRUCTORS);
-      }
     } catch (error) {
-      console.error('Error loading data:', error);
-      setDriverStandings(FALLBACK_DRIVERS);
-      setConstructorStandings(FALLBACK_CONSTRUCTORS);
+      console.error('Error loading calendar:', error);
+    }
+  }, []);
+
+  const loadStandings = useCallback(async () => {
+    try {
+      // Live championship standings from Jolpica — no fallback numbers on failure
+      const [drivers, constructors] = await Promise.all([
+        fetchEnrichedDriverStandings(),
+        fetchEnrichedConstructorStandings(),
+      ]);
+
+      setDriverStandings(drivers.standings);
+      setConstructorStandings(constructors.standings);
+      setStandingsRound(drivers.round || constructors.round || null);
+      setStandingsUpdatedAt(new Date());
+      setStandingsError(null);
+    } catch (error) {
+      console.error('Error loading standings:', error);
+      setDriverStandings([]);
+      setConstructorStandings([]);
+      setStandingsRound(null);
+      setStandingsUpdatedAt(null);
+      setStandingsError("Couldn't load standings right now.");
+    }
+  }, []);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      await Promise.all([loadCalendar(), loadStandings()]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadCalendar, loadStandings]);
 
   useEffect(() => {
     loadData();
@@ -82,14 +100,30 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const refresh = () => loadData();
 
+  // Reload only standings (e.g. Retry button) without flashing the calendar sections
+  const [standingsLoading, setStandingsLoading] = useState(false);
+  const refreshStandings = async () => {
+    setStandingsLoading(true);
+    try {
+      await loadStandings();
+    } finally {
+      setStandingsLoading(false);
+    }
+  };
+
   return (
     <DataContext.Provider value={{
       raceWeekends,
       nextRace,
       driverStandings,
       constructorStandings,
+      standingsError,
+      standingsUpdatedAt,
+      standingsRound,
+      standingsLoading,
       loading,
       refresh,
+      refreshStandings,
     }}>
       {children}
     </DataContext.Provider>
