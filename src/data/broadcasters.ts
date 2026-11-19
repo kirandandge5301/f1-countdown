@@ -23,12 +23,12 @@ export const BROADCASTERS: Record<string, CountryBroadcasters> = {
       href: 'https://f1tv.formula1.com/'
     },
     secondary: {
-      name: 'Disney+ Hotstar',
-      description: 'Live streaming of all F1 sessions in India with Hindi and English commentary.',
+      name: 'FanCode',
+      description: 'Official Formula 1 broadcast partner in India, with live coverage of every session.',
       region: 'INDIA',
       variant: 'dark',
       icon: 'tv',
-      href: 'https://www.hotstar.com/in/sports'
+      href: 'https://www.fancode.com/'
     }
   },
   GB: {
