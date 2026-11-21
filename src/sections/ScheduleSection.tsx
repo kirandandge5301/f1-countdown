@@ -6,7 +6,7 @@ import type { RaceWeekend, Session } from '@/services/openf1';
 
 export default function ScheduleSection() {
   const { timezone, timezoneLabel } = useTimezone();
-  const { raceWeekends, totalRounds, loading } = useData();
+  const { raceWeekends, totalRounds, activeSeason, seasonStatus, loading } = useData();
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLElement>({ threshold: 0.1 });
 
   const now = new Date();
@@ -31,7 +31,7 @@ export default function ScheduleSection() {
 
         {/* Heading */}
         <h2 className="text-[clamp(32px,4vw,56px)] font-bold text-[var(--text-primary)] tracking-[-0.02em] leading-tight mb-4">
-          2026 Calendar.
+          {activeSeason} Calendar.
         </h2>
 
         <p className="text-base text-[var(--text-secondary)] max-w-[480px] mb-10">
@@ -44,6 +44,10 @@ export default function ScheduleSection() {
               <div key={i} className="h-24 rounded-2xl bg-[var(--bg-surface)] animate-pulse" />
             ))}
           </div>
+        ) : raceWeekends.length === 0 && seasonStatus === 'not-published' ? (
+          <p className="text-sm text-[var(--text-secondary)]">
+            The {activeSeason} calendar hasn't been published yet.
+          </p>
         ) : (
           <div className="space-y-4">
             {raceWeekends.map((race: RaceWeekend, i: number) => {

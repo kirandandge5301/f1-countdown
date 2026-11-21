@@ -5,11 +5,7 @@
  */
 
 const API_BASE = 'https://api.openf1.org/v1';
-const JOLPICA_BASE = 'https://api.jolpi.ca/ergast/f1/current';
 const JOLPICA_ROOT = 'https://api.jolpi.ca/ergast/f1';
-
-// Single source of truth for the calendar season (made dynamic in a later step)
-export const SEASON_YEAR = 2026;
 const CACHE_DURATION = 60000; // 60 seconds
 
 // ======= TYPES =======
@@ -69,6 +65,8 @@ export interface RaceWeekend {
   meeting: Meeting;
   sessions: Session[];
   isSprint: boolean;
+  /** true when built from the Jolpica calendar only (OpenF1 has no sessions yet) */
+  provisional?: boolean;
 }
 
 export interface RaceWeekendsResult {
@@ -76,11 +74,20 @@ export interface RaceWeekendsResult {
   totalRounds: number;
 }
 
+export interface SeasonCalendar extends RaceWeekendsResult {
+  year: number;
+  status: SeasonStatus;
+}
+
 export interface JolpicaRace {
   round: string;
   raceName: string;
   date: string;   // "YYYY-MM-DD"
   time?: string;  // "HH:MM:SSZ" (UTC); may be missing for unconfirmed races
+  Circuit?: {
+    circuitName?: string;
+    Location?: { locality?: string; country?: string };
+  };
 }
 
 export interface NextRaceInfo {
@@ -114,11 +121,21 @@ function setCache<T>(key: string, data: T): void {
 
 // ======= FETCH UTILS =======
 
+const RATE_LIMIT_RETRIES = 2;
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 async function fetchJSON<T>(endpoint: string): Promise<T | null> {
   try {
-    const resp = await fetch(`${API_BASE}${endpoint}`, {
+    let resp = await fetch(`${API_BASE}${endpoint}`, {
       headers: { 'Accept': 'application/json' }
     });
+    // OpenF1 rate-limits bursts of requests (HTTP 429): wait briefly and retry
+    for (let attempt = 1; resp.status === 429 && attempt <= RATE_LIMIT_RETRIES; attempt++) {
+      await wait(1000 * attempt);
+      resp = await fetch(`${API_BASE}${endpoint}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+    }
     if (!resp.ok) {
       console.warn(`OpenF1 API error: ${resp.status} for ${endpoint}`);
       return null;
@@ -132,7 +149,7 @@ async function fetchJSON<T>(endpoint: string): Promise<T | null> {
 
 // ======= MEETINGS (RACES) =======
 
-export async function fetchMeetings(year: number = SEASON_YEAR): Promise<Meeting[]> {
+export async function fetchMeetings(year: number): Promise<Meeting[]> {
   const cacheKey = `meetings_${year}`;
   const cached = getCached<Meeting[]>(cacheKey);
   if (cached) return cached;
@@ -152,7 +169,7 @@ export async function fetchMeetings(year: number = SEASON_YEAR): Promise<Meeting
 
 // ======= SESSIONS =======
 
-export async function fetchSessions(year: number = SEASON_YEAR): Promise<Session[]> {
+export async function fetchSessions(year: number): Promise<Session[]> {
   const cacheKey = `sessions_${year}`;
   const cached = getCached<Session[]>(cacheKey);
   if (cached) return cached;
@@ -208,8 +225,12 @@ export async function fetchDrivers(): Promise<DriverInfo[]> {
 
 // ======= JOLPICA CALENDAR (official round numbers) =======
 
-/** Official race calendar from Jolpica. Cancelled races are not listed. Never throws. */
-export async function fetchJolpicaCalendar(year: number = SEASON_YEAR): Promise<JolpicaRace[] | null> {
+/**
+ * Official race calendar from Jolpica. Cancelled races are not listed. Never throws.
+ * Returns [] when Jolpica answers but has no races for that year (not published yet),
+ * and null when the request itself fails.
+ */
+export async function fetchJolpicaCalendar(year: number): Promise<JolpicaRace[] | null> {
   const cacheKey = `jolpica_calendar_${year}`;
   const cached = getCached<JolpicaRace[]>(cacheKey);
   if (cached) return cached;
@@ -224,9 +245,12 @@ export async function fetchJolpicaCalendar(year: number = SEASON_YEAR): Promise<
     }
     const json = await resp.json();
     const races = json?.MRData?.RaceTable?.Races;
-    if (!Array.isArray(races) || races.length === 0) {
-      console.warn(`Jolpica calendar returned no races for ${year}`);
+    if (!Array.isArray(races)) {
+      console.warn(`Jolpica calendar returned an unexpected response for ${year}`);
       return null;
+    }
+    if (races.length === 0) {
+      console.warn(`Jolpica calendar has no races for ${year} yet`);
     }
     setCache(cacheKey, races as JolpicaRace[]);
     return races as JolpicaRace[];
@@ -307,7 +331,7 @@ export function assignRounds(
 
 // ======= COMBINED DATA =======
 
-export async function fetchRaceWeekends(year: number = SEASON_YEAR): Promise<RaceWeekendsResult> {
+export async function fetchRaceWeekends(year: number): Promise<RaceWeekendsResult> {
   const cacheKey = `race_weekends_${year}`;
   const cached = getCached<RaceWeekendsResult>(cacheKey);
   if (cached) return cached;
@@ -343,8 +367,177 @@ export async function fetchRaceWeekends(year: number = SEASON_YEAR): Promise<Rac
   return result;
 }
 
-export function findNextRace(weekends: RaceWeekend[]): NextRaceInfo | null {
-  const now = new Date();
+// ======= SEASON ROLLOVER =======
+
+function raceEndTime(weekend: RaceWeekend): number {
+  const race = weekend.sessions.find(s => s.session_name === 'Race' && !s.is_cancelled);
+  if (race) return new Date(race.date_end || race.date_start).getTime();
+  return new Date(weekend.meeting.date_end || weekend.meeting.date_start).getTime();
+}
+
+/**
+ * Picks the season to show: the current (UTC) year while its calendar still has a
+ * race that hasn't finished; otherwise the next year.
+ * `calendars` maps a year to its weekends. If the current year's calendar is missing
+ * or empty we can't tell whether it's over, so we stay on the current year.
+ * Pure: no fetching, no clock reads.
+ */
+export function getActiveSeason(
+  now: Date,
+  calendars: Record<number, RaceWeekend[] | null | undefined>
+): number {
+  const year = now.getUTCFullYear();
+  const current = calendars[year];
+  if (!current || current.length === 0) return year;
+
+  const nowMs = now.getTime();
+  const hasUnfinishedRace = current.some(
+    w => !w.meeting.is_cancelled && raceEndTime(w) > nowMs
+  );
+  return hasUnfinishedRace ? year : year + 1;
+}
+
+/**
+ * Builds provisional weekends from Jolpica race dates, for a season OpenF1 doesn't
+ * have sessions for yet. Each weekend gets a single Race session at Jolpica's
+ * `${date}T${time}`, or no session at all if Jolpica has no time (never invented).
+ */
+export function weekendsFromJolpica(races: JolpicaRace[], year: number): RaceWeekend[] {
+  return races.map(r => {
+    const round = Number(r.round);
+    const start = r.time ? `${r.date}T${r.time}` : `${r.date}T00:00:00Z`;
+    const meeting: Meeting = {
+      meeting_key: -round, // negative: synthetic, not an OpenF1 key
+      meeting_name: r.raceName,
+      meeting_official_name: r.raceName,
+      location: r.Circuit?.Location?.locality || '',
+      country_key: 0,
+      country_code: '',
+      country_name: r.Circuit?.Location?.country || '',
+      country_flag: '',
+      circuit_key: 0,
+      circuit_short_name: r.Circuit?.circuitName || '',
+      circuit_type: '',
+      circuit_info_url: '',
+      circuit_image: '',
+      gmt_offset: '',
+      date_start: start,
+      date_end: start,
+      year,
+      is_cancelled: false,
+    };
+    const sessions: Session[] = r.time
+      ? [{
+          session_key: -round,
+          session_type: 'Race',
+          session_name: 'Race',
+          date_start: start,
+          date_end: start,
+          meeting_key: -round,
+          circuit_key: 0,
+          circuit_short_name: meeting.circuit_short_name,
+          country_key: 0,
+          country_code: '',
+          country_name: meeting.country_name,
+          location: meeting.location,
+          gmt_offset: '',
+          year,
+          is_cancelled: false,
+        }]
+      : [];
+    return { round, meeting, sessions, isSprint: false, provisional: true };
+  });
+}
+
+/**
+ * Calendar for one season:
+ * - 'live': OpenF1 weekends (rounds from Jolpica, as before)
+ * - 'provisional': OpenF1 has nothing yet, so weekends come from Jolpica race dates
+ * - 'not-published': both answered, neither has this season yet
+ * - 'unavailable': the data couldn't be loaded (or OpenF1 has meetings but their
+ *   sessions failed to load), so we can't say whether the calendar exists
+ */
+export async function fetchSeasonCalendar(year: number): Promise<SeasonCalendar> {
+  const live = await fetchRaceWeekends(year);
+  const hasSessions = live.weekends.some(w => w.sessions.length > 0);
+  if (hasSessions) {
+    return { ...live, year, status: 'live' };
+  }
+
+  const jolpica = await fetchJolpicaCalendar(year);
+  if (jolpica && jolpica.length > 0) {
+    return {
+      weekends: weekendsFromJolpica(jolpica, year),
+      totalRounds: jolpica.length,
+      year,
+      status: 'provisional',
+    };
+  }
+
+  // OpenF1 listing meetings for this year means a calendar exists: never call it "not published"
+  const openF1HasMeetings = live.weekends.length > 0;
+  return {
+    weekends: [],
+    totalRounds: 0,
+    year,
+    status: jolpica && !openF1HasMeetings ? 'not-published' : 'unavailable',
+  };
+}
+
+export type SeasonStatus = 'live' | 'provisional' | 'not-published' | 'unavailable';
+
+export type HeroState =
+  | { kind: 'race'; next: NextRaceInfo; provisional: boolean; targetTime: string | null }
+  | { kind: 'complete'; completedYear: number; nextYear: number }
+  | { kind: 'none' };
+
+/**
+ * What the hero shows for a season at time `now`. Pure.
+ * - Off-season with a known calendar: the first race not yet run.
+ * - Provisional (Jolpica only): countdown to the race start, or no countdown if
+ *   Jolpica has no time yet.
+ * - Calendar not published anywhere: the "season complete" card.
+ */
+export function getHeroState(
+  now: Date,
+  season: Pick<SeasonCalendar, 'year' | 'weekends' | 'status'>
+): HeroState {
+  if (season.weekends.length === 0) {
+    return season.status === 'not-published'
+      ? { kind: 'complete', completedYear: season.year - 1, nextYear: season.year }
+      : { kind: 'none' };
+  }
+
+  if (season.status === 'provisional') {
+    const nowMs = now.getTime();
+    for (const w of season.weekends) {
+      const race = w.sessions[0];
+      // Without a time, a race counts as upcoming until the end of its day (UTC)
+      const upcoming = race
+        ? new Date(race.date_start).getTime() > nowMs
+        : new Date(w.meeting.date_start).getTime() + 24 * HOUR_MS > nowMs;
+      if (upcoming) {
+        return {
+          kind: 'race',
+          next: { race: w, nextSession: race || null, allSessions: w.sessions },
+          provisional: true,
+          targetTime: race ? race.date_start : null,
+        };
+      }
+    }
+  }
+
+  const next = findNextRace(season.weekends, now);
+  if (!next) return { kind: 'none' };
+  return {
+    kind: 'race',
+    next,
+    provisional: false,
+    targetTime: next.nextSession ? next.nextSession.date_start : null,
+  };
+}
+
+export function findNextRace(weekends: RaceWeekend[], now: Date = new Date()): NextRaceInfo | null {
 
   for (const race of weekends) {
     // Sort sessions chronologically
@@ -448,6 +641,8 @@ export interface StandingsResult<T> {
   standings: T[];
   season: number;
   round: number;
+  /** true when these are the previous season's final standings (new season, before round 1) */
+  isFinal: boolean;
 }
 
 // Keyed by Jolpica constructorId (stable across sponsor/name changes)
@@ -470,11 +665,14 @@ function teamColor(constructorId: string | undefined): string {
   return (constructorId && TEAM_COLORS[constructorId]) || '#999999';
 }
 
-async function fetchJolpicaStandings<K extends string, T>(
-  path: string,
+/** One season's standings table. Throws on HTTP/format errors; [] entries if none yet. */
+async function fetchJolpicaStandingsTable<K extends string, T>(
+  seasonPath: string, // 'current' or a year
+  file: string,
   listKey: K
 ): Promise<{ entries: T[]; season: number; round: number }> {
-  const resp = await fetch(`${JOLPICA_BASE}/${path}`, {
+  const path = `${seasonPath}/${file}`;
+  const resp = await fetch(`${JOLPICA_ROOT}/${path}`, {
     headers: { 'Accept': 'application/json' },
     cache: 'no-store',
   });
@@ -483,16 +681,37 @@ async function fetchJolpicaStandings<K extends string, T>(
   }
   const json = (await resp.json()) as JolpicaStandingsTable<K, T>;
   const table = json?.MRData?.StandingsTable;
-  const list = table?.StandingsLists?.[0];
-  const entries = list?.[listKey];
-  if (!table || !list || !Array.isArray(entries) || entries.length === 0) {
-    throw new Error(`Jolpica API returned no standings for ${path}`);
+  if (!table || !Array.isArray(table.StandingsLists)) {
+    throw new Error(`Jolpica API returned an unexpected response for ${path}`);
   }
+  const list = table.StandingsLists[0];
+  const entries = list?.[listKey];
   return {
-    entries,
-    season: Number(list.season ?? table.season),
-    round: Number(list.round ?? table.round),
+    entries: Array.isArray(entries) ? entries : [],
+    season: Number(list?.season ?? table.season),
+    round: Number(list?.round ?? table.round),
   };
+}
+
+/**
+ * Current-season standings; if the new season has none yet (before round 1),
+ * the previous season's final standings instead (isFinal: true). Throws if neither.
+ */
+async function fetchJolpicaStandings<K extends string, T>(
+  file: string,
+  listKey: K
+): Promise<{ entries: T[]; season: number; round: number; isFinal: boolean }> {
+  const current = await fetchJolpicaStandingsTable<K, T>('current', file, listKey);
+  if (current.entries.length > 0) return { ...current, isFinal: false };
+
+  const currentSeason = Number.isFinite(current.season) && current.season > 0
+    ? current.season
+    : new Date().getUTCFullYear();
+  const previous = await fetchJolpicaStandingsTable<K, T>(String(currentSeason - 1), file, listKey);
+  if (previous.entries.length === 0) {
+    throw new Error(`Jolpica API returned no standings for ${currentSeason} or ${currentSeason - 1}`);
+  }
+  return { ...previous, isFinal: true };
 }
 
 // ======= STANDINGS WITH DRIVER INFO =======
@@ -542,7 +761,7 @@ export async function fetchEnrichedDriverStandings(): Promise<StandingsResult<En
     };
   });
 
-  return { standings: rows, season: standings.season, round: standings.round };
+  return { standings: rows, season: standings.season, round: standings.round, isFinal: standings.isFinal };
 }
 
 export async function fetchEnrichedConstructorStandings(): Promise<StandingsResult<EnrichedConstructorStanding>> {
@@ -559,7 +778,7 @@ export async function fetchEnrichedConstructorStandings(): Promise<StandingsResu
     wins: Number(entry.wins) || 0,
   }));
 
-  return { standings: rows, season: standings.season, round: standings.round };
+  return { standings: rows, season: standings.season, round: standings.round, isFinal: standings.isFinal };
 }
 
 // ======= FORCE REFRESH =======

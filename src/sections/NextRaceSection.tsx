@@ -10,13 +10,21 @@ import { CIRCUIT_INFO } from '@/data/circuitInfo';
 
 export default function NextRaceSection() {
   const { timezoneLabel } = useTimezone();
-  const { nextRace, totalRounds, loading } = useData();
+  const { nextRace, heroState, totalRounds, loading } = useData();
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLDivElement>({ threshold: 0.1 });
 
   const race = nextRace?.race;
   const nextSession = nextRace?.nextSession;
   const allSessions = nextRace?.allSessions || [];
   const nextSessionTime = nextSession ? new Date(nextSession.date_start) : null;
+
+  // Off-season: calendar known only from Jolpica race dates (no OpenF1 sessions yet)
+  const isProvisional = heroState?.kind === 'race' && heroState.provisional;
+  const provisionalDate = isProvisional && race
+    ? new Date(race.meeting.date_start).toLocaleDateString(undefined, {
+        timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric'
+      })
+    : null;
 
   const circuitInfo = race ? CIRCUIT_INFO[race.meeting.meeting_name] : null;
 
@@ -59,6 +67,18 @@ export default function NextRaceSection() {
             <div className="h-12 w-64 mx-auto bg-[var(--bg-surface)] rounded-xl" />
             <div className="h-32 bg-[var(--bg-surface)] rounded-2xl" />
           </div>
+        ) : heroState?.kind === 'complete' ? (
+          <div className="text-center py-20">
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E10600]" />
+              <span className="text-[11px] font-medium tracking-[0.2em] text-[#E10600] uppercase">
+                OFF-SEASON
+              </span>
+            </div>
+            <h1 className="text-[clamp(28px,6vw,48px)] font-semibold text-[var(--text-primary)] tracking-[-0.02em] leading-tight">
+              {heroState.completedYear} season complete · {heroState.nextYear} calendar coming soon
+            </h1>
+          </div>
         ) : race ? (
           <>
             {/* Top label */}
@@ -84,9 +104,21 @@ export default function NextRaceSection() {
             </p>
 
             {/* Countdown - Smaller & Better Balanced */}
-            <div className="mb-12 md:mb-16 flex justify-center">
-              <CountdownDisplay targetTime={nextSessionTime} size="hero" />
-            </div>
+            {isProvisional && !nextSessionTime ? (
+              // Jolpica has a date but no start time yet: no countdown, never an invented time
+              <p className="mb-12 md:mb-16 text-center text-sm text-[var(--text-secondary)]">
+                {provisionalDate} · times confirmed closer to the date
+              </p>
+            ) : (
+              <div className="mb-12 md:mb-16 flex flex-col items-center">
+                <CountdownDisplay targetTime={nextSessionTime} size="hero" />
+                {isProvisional && (
+                  <p className="mt-6 text-sm text-[var(--text-secondary)]">
+                    Race start · times confirmed closer to the date
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Share Button */}
             <div className="flex justify-center mb-12 md:mb-16">

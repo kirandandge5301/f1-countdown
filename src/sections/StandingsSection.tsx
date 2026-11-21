@@ -21,6 +21,7 @@ export default function StandingsSection() {
     standingsError,
     standingsUpdatedAt,
     standingsRound,
+    standingsFinalSeason,
     refreshStandings
   } = useData();
   const isLoading = loading || standingsLoading;
@@ -72,6 +73,7 @@ export default function StandingsSection() {
         {/* Last updated */}
         {!isLoading && !standingsError && standingsUpdatedAt && (
           <p className="-mt-4 mb-6 text-xs text-[var(--text-tertiary)]">
+            {standingsFinalSeason ? `Final ${standingsFinalSeason} standings · ` : ''}
             Last updated{' '}
             {standingsUpdatedAt.toLocaleString(undefined, {
               day: 'numeric',
@@ -80,7 +82,7 @@ export default function StandingsSection() {
               hour: '2-digit',
               minute: '2-digit'
             })}
-            {standingsRound ? ` · After Round ${standingsRound}` : ''}
+            {standingsRound && !standingsFinalSeason ? ` · After Round ${standingsRound}` : ''}
           </p>
         )}
 
