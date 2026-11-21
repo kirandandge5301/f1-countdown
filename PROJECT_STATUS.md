@@ -1,48 +1,46 @@
 # Project Status
 
-_Last updated: 2026-11-19 · commit `ab77165`_
+_Last updated: 2026-11-21 · branch `fix/round-numbers` (`da119aa`, not yet merged)_
 
-## Changed this session
+## Done
 
-- **Standings now use the Jolpica API** (`/current/driverstandings.json`,
-  `/current/constructorstandings.json`) instead of OpenF1 championship endpoints.
-  - Real points and **wins** (previously always 0); season and round returned with data.
-  - On any failure (network, non-OK status, empty list) the lists are cleared and an
-    error card is shown. Hardcoded fallback standings are no longer used.
-  - "Last updated <date, time> · After Round N" line shown under the tabs on success.
-  - Driver headshots still come from OpenF1 `/drivers`, best-effort, matched by driver
-    number. If that call fails, avatars show the plain circle; standings still load.
-- **Retry behavior:** the error card's Retry button calls `refreshStandings()`, which
-  reloads standings only. The calendar is not refetched, so Next Race / Schedule do
-  not flash loading skeletons. `refresh()` still reloads everything.
-- **Files touched:**
-  - `src/services/openf1.ts` - Jolpica fetch + mapping; old OpenF1 standings code removed
-  - `src/context/DataContext.tsx` - separate standings state, error, timestamp, retry
-  - `src/sections/StandingsSection.tsx` - timestamp line + error card (layout unchanged)
+- **Round numbers (step 1/5)** - `fix/round-numbers`, `da119aa`
+  - Cancelled meetings (`is_cancelled`, e.g. Bahrain and Saudi Arabia 2026) are dropped
+    at load, so they never reach the hero, schedule or next-race logic.
+  - Rounds come from the Jolpica calendar, matched by race start time (within 24 h;
+    or last day vs race date within 2 days if no Race session yet). Never by name.
+  - If Jolpica fails or any weekend can't be matched, ALL weekends use sequential
+    numbering by date, with one console warning (never a mix of the two).
+  - "/ 24" and "24 ROUNDS" replaced by `totalRounds` (Jolpica count, else weekend count).
+  - Season year lives in one constant: `SEASON_YEAR` in `src/services/openf1.ts`.
+  - Files: `src/services/openf1.ts`, `src/context/DataContext.tsx`,
+    `src/sections/NextRaceSection.tsx`, `src/sections/ScheduleSection.tsx`.
+- **Standings on Jolpica** (`ab77165`): live points and wins, "Last updated" line,
+  honest error card. Retry reloads standings only.
+- **India broadcaster** (`6534024`): secondary card is now FanCode.
 
-## Still using old / static data
+## Still open (audit steps 2-5 and other items)
 
-- **Calendar fallback:** `src/data/races.ts` (`RACES`) is used by `DataContext.tsx`
-  whenever OpenF1 returns no meetings.
-- **Constructor colors:** hardcoded `TEAM_COLORS` map in `src/services/openf1.ts`,
-  keyed by Jolpica `constructorId`. New or renamed teams fall back to `#999999`.
-- **Round count:** `src/sections/NextRaceSection.tsx:73` hardcodes `/ 24` instead of
-  using the real number of rounds.
-- **Unused helpers:** `src/f1api.ts` (`fetchCurrentSchedule`, `fetchDriverStandings`,
-  `fetchConstructorStandings`, `convertRace`) is only imported by
-  `src/hooks/useF1Schedule.ts`, which nothing uses.
-- `src/data/standings.ts` is no longer imported anywhere.
+- **Hard-coded year:** `SEASON_YEAR = 2026` and the "2026 Calendar." heading (step 2).
+- **Static calendar fallback:** if OpenF1 returns nothing, `src/data/races.ts` is shown
+  as if live, which breaks the "never show stale data as live" rule (step 3).
+- **Calendar source:** the race list itself still comes from OpenF1 meetings. Only the
+  round numbers come from Jolpica. `CLAUDE.md` names Jolpica as the calendar source.
+- **Driver photos in standings:** `src/sections/StandingsSection.tsx:136` shows OpenF1
+  headshots. `CLAUDE.md` design rules say no driver photos anywhere. Needs a decision.
+- **Constructor colors:** hardcoded `TEAM_COLORS` map in `src/services/openf1.ts`.
+- **Cancelled single sessions** inside a non-cancelled weekend are not filtered yet.
+- **Unused code:** `src/f1api.ts` + `src/hooks/useF1Schedule.ts`, `src/data/standings.ts`.
 
 ## Known open bugs
 
-- **HowToWatch shows literal `·`:** `src/sections/HowToWatchSection.tsx:43,50`
-  put `·` in plain JSX string attributes (`badge="..."`), where JS escapes are not
-  processed. The badges render "WORLDWIDE · OFFICIAL" instead of
-  "WORLDWIDE · OFFICIAL". The same escapes in `src/data/broadcasters.ts` render fine.
+- **HowToWatch shows literal `\u00b7`:** `src/sections/HowToWatchSection.tsx:43,50`
+  use `\u00b7` in plain JSX string attributes, where JS escapes aren't processed.
+  The badges read "WORLDWIDE \u00b7 OFFICIAL" instead of "WORLDWIDE · OFFICIAL".
 - **Timezone label:**
-  - In `src/components/ExpandableRaceCard.tsx:82` session rows always show times in
-    UTC with a hardcoded "UTC", while the card's race time (line 128) uses the
-    selected timezone and label.
-  - `TimezoneContext.tsx` builds the label from the IANA ID (e.g. "Kolkata"), not the
-    picker's names (e.g. "India"). It also starts as "Mumbai (GMT+5:30)" until the
-    effect runs.
+  - `src/components/ExpandableRaceCard.tsx:82` session rows are always UTC (hardcoded
+    "UTC") while the card's race time uses the selected timezone.
+  - The label is built from the IANA ID (e.g. "Kolkata"), not the picker's names
+    (e.g. "India"), and starts as "Mumbai (GMT+5:30)" before the effect runs.
+- **Miami start time** differs between APIs (OpenF1 17:00Z, Jolpica 20:00Z).
+  Matching still works; one source is wrong.
