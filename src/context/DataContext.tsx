@@ -10,6 +10,7 @@ import {
 const DataContext = createContext<any>({
   raceWeekends: [],
   nextRace: null,
+  totalRounds: 0,
   driverStandings: [],
   constructorStandings: [],
   standingsError: null,
@@ -24,6 +25,7 @@ const DataContext = createContext<any>({
 export function DataProvider({ children }: { children: ReactNode }) {
   const [raceWeekends, setRaceWeekends] = useState<any[]>([]);
   const [nextRace, setNextRace] = useState<any>(null);
+  const [totalRounds, setTotalRounds] = useState<number>(0);
   const [driverStandings, setDriverStandings] = useState<any[]>([]);
   const [constructorStandings, setConstructorStandings] = useState<any[]>([]);
   const [standingsError, setStandingsError] = useState<string | null>(null);
@@ -33,8 +35,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const loadCalendar = useCallback(async () => {
     try {
-      // Fetch live race calendar from OpenF1 API
-      let weekends = await fetchRaceWeekends();
+      // Fetch live race calendar from OpenF1 API (round numbers from Jolpica)
+      const live = await fetchRaceWeekends();
+      let weekends = live.weekends;
+      let total = live.totalRounds;
 
       // Fall back to static data if API fails or returns empty
       if (!weekends || weekends.length === 0) {
@@ -53,9 +57,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
           })),
           isSprint: !!r.sprint,
         })) as any;
+        total = weekends.length;
       }
 
       setRaceWeekends(weekends);
+      setTotalRounds(total);
       setNextRace(findNextRace(weekends as any));
     } catch (error) {
       console.error('Error loading calendar:', error);
@@ -115,6 +121,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     <DataContext.Provider value={{
       raceWeekends,
       nextRace,
+      totalRounds,
       driverStandings,
       constructorStandings,
       standingsError,

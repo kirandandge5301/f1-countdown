@@ -6,6 +6,10 @@
 
 const API_BASE = 'https://api.openf1.org/v1';
 const JOLPICA_BASE = 'https://api.jolpi.ca/ergast/f1/current';
+const JOLPICA_ROOT = 'https://api.jolpi.ca/ergast/f1';
+
+// Single source of truth for the calendar season (made dynamic in a later step)
+export const SEASON_YEAR = 2026;
 const CACHE_DURATION = 60000; // 60 seconds
 
 // ======= TYPES =======
@@ -67,6 +71,18 @@ export interface RaceWeekend {
   isSprint: boolean;
 }
 
+export interface RaceWeekendsResult {
+  weekends: RaceWeekend[];
+  totalRounds: number;
+}
+
+export interface JolpicaRace {
+  round: string;
+  raceName: string;
+  date: string;   // "YYYY-MM-DD"
+  time?: string;  // "HH:MM:SSZ" (UTC); may be missing for unconfirmed races
+}
+
 export interface NextRaceInfo {
   race: RaceWeekend;
   nextSession: Session | null;
@@ -116,16 +132,17 @@ async function fetchJSON<T>(endpoint: string): Promise<T | null> {
 
 // ======= MEETINGS (RACES) =======
 
-export async function fetchMeetings(year: number = 2026): Promise<Meeting[]> {
+export async function fetchMeetings(year: number = SEASON_YEAR): Promise<Meeting[]> {
   const cacheKey = `meetings_${year}`;
   const cached = getCached<Meeting[]>(cacheKey);
   if (cached) return cached;
 
   const data = await fetchJSON<Meeting[]>(`/meetings?year=${year}`);
   if (data) {
-    // Filter out testing sessions, sort by date
+    // Filter out testing and cancelled meetings, sort by date
     const races = data
       .filter(m => !m.meeting_name.toLowerCase().includes('testing'))
+      .filter(m => !m.is_cancelled)
       .sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime());
     setCache(cacheKey, races);
     return races;
@@ -135,7 +152,7 @@ export async function fetchMeetings(year: number = 2026): Promise<Meeting[]> {
 
 // ======= SESSIONS =======
 
-export async function fetchSessions(year: number = 2026): Promise<Session[]> {
+export async function fetchSessions(year: number = SEASON_YEAR): Promise<Session[]> {
   const cacheKey = `sessions_${year}`;
   const cached = getCached<Session[]>(cacheKey);
   if (cached) return cached;
@@ -189,35 +206,141 @@ export async function fetchDrivers(): Promise<DriverInfo[]> {
   return [];
 }
 
+// ======= JOLPICA CALENDAR (official round numbers) =======
+
+/** Official race calendar from Jolpica. Cancelled races are not listed. Never throws. */
+export async function fetchJolpicaCalendar(year: number = SEASON_YEAR): Promise<JolpicaRace[] | null> {
+  const cacheKey = `jolpica_calendar_${year}`;
+  const cached = getCached<JolpicaRace[]>(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const resp = await fetch(`${JOLPICA_ROOT}/${year}/races.json?limit=100`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!resp.ok) {
+      console.warn(`Jolpica calendar error: ${resp.status} for ${year}`);
+      return null;
+    }
+    const json = await resp.json();
+    const races = json?.MRData?.RaceTable?.Races;
+    if (!Array.isArray(races) || races.length === 0) {
+      console.warn(`Jolpica calendar returned no races for ${year}`);
+      return null;
+    }
+    setCache(cacheKey, races as JolpicaRace[]);
+    return races as JolpicaRace[];
+  } catch (err) {
+    console.warn(`Jolpica calendar fetch failed for ${year}`, err);
+    return null;
+  }
+}
+
+const HOUR_MS = 60 * 60 * 1000;
+const RACE_MATCH_WINDOW_MS = 24 * HOUR_MS;
+const DATE_MATCH_WINDOW_MS = 48 * HOUR_MS;
+
+function jolpicaRaceStart(race: JolpicaRace): number {
+  // If Jolpica has no time yet, compare against the start of the race day (UTC)
+  return new Date(`${race.date}T${race.time || '00:00:00Z'}`).getTime();
+}
+
+/**
+ * Assigns official round numbers to OpenF1 weekends by matching race start times
+ * against the Jolpica calendar (never by name: the two APIs name races differently).
+ * - Weekend with a "Race" session: match Jolpica `${date}T${time}` within 24 hours.
+ * - Otherwise: match meeting.date_end against Jolpica `date` within 2 days.
+ * If Jolpica is unavailable, or ANY weekend can't be matched uniquely, every weekend
+ * falls back to sequential numbering by date (one console.warn), so rounds are never
+ * a mix of the two schemes.
+ *
+ * Pure apart from the warning: does not mutate its inputs.
+ */
+export function assignRounds(
+  weekends: RaceWeekend[],
+  jolpicaRaces: JolpicaRace[] | null
+): RaceWeekend[] {
+  const byDate = [...weekends].sort(
+    (a, b) => new Date(a.meeting.date_start).getTime() - new Date(b.meeting.date_start).getTime()
+  );
+  const sequential = () => byDate.map((w, idx) => ({ ...w, round: idx + 1 }));
+
+  if (!jolpicaRaces || jolpicaRaces.length === 0) {
+    console.warn('Jolpica calendar unavailable; using sequential round numbers');
+    return sequential();
+  }
+
+  const used = new Set<string>();
+  const rounds: number[] = [];
+
+  for (const weekend of byDate) {
+    const raceSession = weekend.sessions.find(s => s.session_name === 'Race');
+    const target = raceSession
+      ? new Date(raceSession.date_start).getTime()
+      : new Date(weekend.meeting.date_end).getTime();
+    const maxDiff = raceSession ? RACE_MATCH_WINDOW_MS : DATE_MATCH_WINDOW_MS;
+
+    let best: JolpicaRace | null = null;
+    let bestDiff = Infinity;
+    for (const race of jolpicaRaces) {
+      const start = raceSession ? jolpicaRaceStart(race) : new Date(`${race.date}T00:00:00Z`).getTime();
+      const diff = Math.abs(target - start);
+      if (diff <= maxDiff && diff < bestDiff) {
+        best = race;
+        bestDiff = diff;
+      }
+    }
+
+    const round = best ? Number(best.round) : NaN;
+    if (!best || !Number.isFinite(round) || used.has(best.round)) {
+      console.warn(
+        `Could not match "${weekend.meeting.meeting_name}" to the Jolpica calendar; using sequential round numbers`
+      );
+      return sequential();
+    }
+    used.add(best.round);
+    rounds.push(round);
+  }
+
+  return byDate.map((w, idx) => ({ ...w, round: rounds[idx] }));
+}
+
 // ======= COMBINED DATA =======
 
-export async function fetchRaceWeekends(year: number = 2026): Promise<RaceWeekend[]> {
+export async function fetchRaceWeekends(year: number = SEASON_YEAR): Promise<RaceWeekendsResult> {
   const cacheKey = `race_weekends_${year}`;
-  const cached = getCached<RaceWeekend[]>(cacheKey);
+  const cached = getCached<RaceWeekendsResult>(cacheKey);
   if (cached) return cached;
 
   // Fetch in parallel
-  const [meetings, allSessions] = await Promise.all([
+  const [meetings, allSessions, jolpicaRaces] = await Promise.all([
     fetchMeetings(year),
-    fetchSessions(year)
+    fetchSessions(year),
+    fetchJolpicaCalendar(year)
   ]);
 
-  if (!meetings.length) return [];
+  if (!meetings.length) return { weekends: [], totalRounds: 0 };
 
-  const weekends: RaceWeekend[] = meetings.map((meeting, idx) => {
+  const unnumbered: RaceWeekend[] = meetings.map(meeting => {
     const sessions = allSessions.filter(s => s.meeting_key === meeting.meeting_key);
     sessions.sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime());
     const isSprint = sessions.some(s => s.session_name.toLowerCase().includes('sprint'));
     return {
-      round: idx + 1,
+      round: 0,
       meeting,
       sessions,
       isSprint
     };
   });
 
-  setCache(cacheKey, weekends);
-  return weekends;
+  const weekends = assignRounds(unnumbered, jolpicaRaces);
+  const result: RaceWeekendsResult = {
+    weekends,
+    totalRounds: jolpicaRaces?.length || weekends.length
+  };
+
+  setCache(cacheKey, result);
+  return result;
 }
 
 export function findNextRace(weekends: RaceWeekend[]): NextRaceInfo | null {

@@ -10,7 +10,7 @@ import { CIRCUIT_INFO } from '@/data/circuitInfo';
 
 export default function NextRaceSection() {
   const { timezoneLabel } = useTimezone();
-  const { nextRace, loading } = useData();
+  const { nextRace, totalRounds, loading } = useData();
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLDivElement>({ threshold: 0.1 });
 
   const race = nextRace?.race;
@@ -70,7 +70,7 @@ export default function NextRaceSection() {
                 </span>
               </div>
               <span className="font-mono text-xs text-[var(--text-tertiary)]">
-                ROUND {String(race.round).padStart(2, '0')} / 24
+                ROUND {String(race.round).padStart(2, '0')}{totalRounds ? ` / ${totalRounds}` : ''}
               </span>
             </div>
 

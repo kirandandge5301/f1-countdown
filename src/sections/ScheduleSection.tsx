@@ -6,7 +6,7 @@ import type { RaceWeekend, Session } from '@/services/openf1';
 
 export default function ScheduleSection() {
   const { timezone, timezoneLabel } = useTimezone();
-  const { raceWeekends, loading } = useData();
+  const { raceWeekends, totalRounds, loading } = useData();
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLElement>({ threshold: 0.1 });
 
   const now = new Date();
@@ -25,7 +25,7 @@ export default function ScheduleSection() {
         <div className="flex items-center gap-2 mb-4">
           <span className="w-1.5 h-1.5 rounded-full bg-[#E10600]" />
           <span className="text-[11px] font-medium tracking-[0.2em] text-[#E10600] uppercase">
-            FULL SEASON • 24 ROUNDS
+            FULL SEASON{totalRounds ? ` • ${totalRounds} ROUNDS` : ''}
           </span>
         </div>
 
