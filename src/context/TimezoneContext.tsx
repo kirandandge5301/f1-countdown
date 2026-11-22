@@ -1,9 +1,18 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { detectUserTimezone, getTimezoneOffsetLabel, formatTimeInZone, formatDateInZone } from '@/data/timezones';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
+import {
+  detectUserTimezone,
+  normalizeTimezone,
+  buildTimezoneLabel,
+  buildTimezoneOptions,
+  formatTimeInZone,
+  formatDateInZone,
+  type TimezoneOption
+} from '@/data/timezones';
 
 interface TimezoneContextType {
   timezone: string;
-  timezoneLabel: string;        // e.g. "Mumbai (GMT+5:30)"
+  timezoneLabel: string;        // e.g. "India (GMT+5:30)", offset as of today
+  timezoneOptions: TimezoneOption[];
   setTimezone: (tz: string) => void;
   formatTime: (utcString: string) => string;
   formatDate: (utcString: string) => string;
@@ -11,40 +20,43 @@ interface TimezoneContextType {
 
 const TimezoneContext = createContext<TimezoneContextType>({
   timezone: 'Asia/Kolkata',
-  timezoneLabel: 'Mumbai (GMT+5:30)',
+  timezoneLabel: 'India (GMT+5:30)',
+  timezoneOptions: [],
   setTimezone: () => {},
   formatTime: () => '--:--',
   formatDate: () => '---'
 });
 
+const STORAGE_KEY = 'gpcountdown-tz';
+
 export function TimezoneProvider({ children }: { children: ReactNode }) {
+  const detected = useMemo(() => detectUserTimezone(), []);
+
   const [timezone, setTimezoneState] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('gpcountdown-tz');
-      if (saved) return saved;
-      
-      // Auto-detect user's real local timezone
-      const detected = detectUserTimezone();
-      return detected;
+    // Saved choice first, else the visitor's own zone. Storage can be blocked (private mode).
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return normalizeTimezone(saved);
+    } catch {
+      // ignore
     }
-    return 'Asia/Kolkata';
+    return detected;
   });
 
-  const [timezoneLabel, setTimezoneLabel] = useState<string>('Mumbai (GMT+5:30)');
+  // Computed, not stored: no flash of a wrong default label on first paint
+  const timezoneLabel = useMemo(() => buildTimezoneLabel(timezone), [timezone]);
+  const timezoneOptions = useMemo(() => buildTimezoneOptions(timezone, detected), [timezone, detected]);
 
   useEffect(() => {
-    const label = getTimezoneOffsetLabel(timezone);
-    // Make it more user-friendly: City (GMT Offset)
-    const city = timezone.split('/').pop()?.replace(/_/g, ' ') || 'Local';
-    setTimezoneLabel(`${city} (${label})`);
-  }, [timezone]);
-
-  useEffect(() => {
-    localStorage.setItem('gpcountdown-tz', timezone);
+    try {
+      localStorage.setItem(STORAGE_KEY, timezone);
+    } catch {
+      // ignore
+    }
   }, [timezone]);
 
   const setTimezone = useCallback((tz: string) => {
-    setTimezoneState(tz);
+    setTimezoneState(normalizeTimezone(tz));
   }, []);
 
   const formatTime = useCallback((utcString: string) => {
@@ -56,12 +68,13 @@ export function TimezoneProvider({ children }: { children: ReactNode }) {
   }, [timezone]);
 
   return (
-    <TimezoneContext.Provider value={{ 
-      timezone, 
-      timezoneLabel, 
-      setTimezone, 
-      formatTime, 
-      formatDate 
+    <TimezoneContext.Provider value={{
+      timezone,
+      timezoneLabel,
+      timezoneOptions,
+      setTimezone,
+      formatTime,
+      formatDate
     }}>
       {children}
     </TimezoneContext.Provider>

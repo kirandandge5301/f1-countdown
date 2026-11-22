@@ -3,7 +3,6 @@ import { Globe, ChevronDown, Sun, Moon, Menu, X } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useTimezone } from '@/context/TimezoneContext';
 import { useData } from '@/context/DataContext';
-import { TIMEZONE_OPTIONS } from '@/data/timezones';
 
 const NAV_LINKS = [
   { label: 'next race', href: '#next-race' },
@@ -14,7 +13,7 @@ const NAV_LINKS = [
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
-  const { timezone, timezoneLabel, setTimezone } = useTimezone();
+  const { timezone, timezoneLabel, timezoneOptions, setTimezone } = useTimezone();
   const { activeSeason } = useData();
   const [tzOpen, setTzOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -111,7 +110,7 @@ export default function Header() {
 
               {tzOpen && (
                 <div className="absolute right-0 top-[calc(100%+6px)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl py-2 min-w-[260px] z-[200] shadow-xl max-h-[320px] overflow-auto">
-                  {TIMEZONE_OPTIONS.map(opt => (
+                  {timezoneOptions.map(opt => (
                     <button
                       key={opt.value}
                       onClick={() => {

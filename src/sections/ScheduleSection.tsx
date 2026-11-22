@@ -74,7 +74,6 @@ export default function ScheduleSection() {
                   isVisible={isVisible}
                   delay={i * 50}
                   timezone={timezone}
-                  timezoneLabel={timezoneLabel}
                 />
               );
             })}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useCountdown } from '@/hooks/useCountdown';
-import { formatTimeInZone } from '@/data/timezones';
+import { formatTimeInZone, formatShortDateInZone, buildTimezoneLabel } from '@/data/timezones';
 import type { RaceWeekend, Session } from '@/services/openf1';
 
 interface ExpandableRaceCardProps {
@@ -10,7 +10,6 @@ interface ExpandableRaceCardProps {
   isVisible: boolean;
   delay: number;
   timezone: string;
-  timezoneLabel: string;
 }
 
 export default function ExpandableRaceCard({
@@ -19,15 +18,20 @@ export default function ExpandableRaceCard({
   isVisible,
   delay,
   timezone,
-  timezoneLabel,
 }: ExpandableRaceCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const now = new Date();
-  const raceSession = race.sessions.find((s: Session) => s.session_type === 'race');
-  const raceTime = raceSession
-    ? formatTimeInZone(raceSession.date_start, timezone)
-    : formatTimeInZone(race.meeting.date_start, timezone);
+  // The Grand Prix itself ("Race"), not the Sprint (also type "Race" in OpenF1)
+  const raceSession = race.sessions.find(
+    (s: Session) => s.session_name === 'Race' && !s.is_cancelled
+  );
+  // No confirmed race start: say so, never show another session's time as the race time.
+  const raceTime = raceSession ? formatTimeInZone(raceSession.date_start, timezone) : null;
+  // The offset depends on the date (daylight saving), so label it for this race's date
+  const raceTimeLabel = raceSession
+    ? buildTimezoneLabel(timezone, new Date(raceSession.date_start))
+    : formatShortDateInZone(race.provisional ? race.meeting.date_start : race.meeting.date_end, 'UTC');
 
   const getSessionStatus = (session: Session) => {
     const sessionStart = new Date(session.date_start);
@@ -38,20 +42,9 @@ export default function ExpandableRaceCard({
     return 'live';
   };
 
-  const formatSessionTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const hours = date.getUTCHours().toString().padStart(2, '0');
-    const mins = date.getUTCMinutes().toString().padStart(2, '0');
-    return `${hours}:${mins}`;
-  };
-
-  const formatSessionDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    const dayName = d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }).toUpperCase();
-    const dayNum = d.getUTCDate().toString().padStart(2, '0');
-    const month = d.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
-    return `${dayName} ${dayNum} ${month}`;
-  };
+  // Session day and time in the selected time zone (the day can differ from UTC)
+  const formatSessionTime = (dateStr: string) => formatTimeInZone(dateStr, timezone);
+  const formatSessionDate = (dateStr: string) => formatShortDateInZone(dateStr, timezone);
 
   const SessionRow = ({ session }: { session: Session }) => {
     const status = getSessionStatus(session);
@@ -79,7 +72,7 @@ export default function ExpandableRaceCard({
 
           <div className="flex items-center gap-2 text-sm flex-wrap justify-between sm:justify-end w-full sm:w-auto">
             <span className="text-[var(--text-secondary)] whitespace-nowrap">
-              {formatSessionDate(session.date_start)} · {formatSessionTime(session.date_start)} UTC
+              {formatSessionDate(session.date_start)} · {formatSessionTime(session.date_start)}
             </span>
             {status === 'upcoming' && (
               <span className="font-mono text-xs text-[var(--text-tertiary)] whitespace-nowrap">
@@ -125,9 +118,9 @@ export default function ExpandableRaceCard({
 
         <div className="text-right flex-shrink-0">
           <span className="font-mono text-base md:text-lg font-bold text-[var(--text-primary)]">
-            {raceTime}
+            {raceTime ?? 'TBC'}
           </span>
-          <p className="text-xs text-[var(--text-tertiary)] mt-0.5">{timezoneLabel}</p>
+          <p className="text-xs text-[var(--text-tertiary)] mt-0.5">{raceTimeLabel}</p>
           {race.isSprint && (
             <span className="inline-block bg-[#E10600] text-white text-xs font-medium px-2 py-1 rounded mt-2 whitespace-nowrap">
               SPRINT
@@ -147,6 +140,11 @@ export default function ExpandableRaceCard({
       {expanded && (
         <div className="bg-[var(--bg-secondary)] border-t border-[var(--border-subtle)] animate-in fade-in duration-300">
           <div className="divide-y divide-[var(--border-subtle)]">
+            {race.sessions.length === 0 && (
+              <p className="py-3 px-4 text-sm text-[var(--text-secondary)]">
+                Session times will be confirmed closer to the date.
+              </p>
+            )}
             {race.sessions.map((session: Session, i: number) => (
               <SessionRow key={session.session_key || i} session={session} />
             ))}
