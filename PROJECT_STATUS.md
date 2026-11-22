@@ -1,10 +1,22 @@
 # Project Status
 
-_Last updated: 2026-11-22 · branch `fix/remove-unused-files` (not yet merged)_
+_Last updated: 2026-11-22 · all work merged to `main`_
 
 ## Done
 
-- **Unused code deleted** - `fix/remove-unused-files`
+- **Time zone display (step 4/5)** - merged
+  - Race cards showed the first practice time as the race time (code looked for
+    session type `'race'`, OpenF1 uses `'Race'`). Now uses the session named "Race";
+    if no start time is published the card shows "TBC" plus the race date.
+  - Session rows use the selected time zone (were hard-coded UTC).
+  - Labels use the picker's names ("India", not "Calcutta"); old zone ids such as
+    `Asia/Calcutta` map to the picker's; no wrong default label on first paint.
+  - Each card's offset label uses that race's date (daylight saving).
+  - Picker also lists the visitor's own zone (and the active one) if missing.
+  - Files: `src/data/timezones.ts`, `src/context/TimezoneContext.tsx`,
+    `src/components/ExpandableRaceCard.tsx`, `src/components/Header.tsx`,
+    `src/sections/ScheduleSection.tsx`.
+- **Unused code deleted** - merged
   - Removed 5 files nothing imported: `src/f1api.ts`, `src/hooks/useF1Schedule.ts`,
     `src/data/standings.ts`, `src/data/races.ts` (hard-coded 2026 calendar) and
     `src/data/raceLogic.ts` (old next-race logic that only used `races.ts`).
@@ -65,8 +77,13 @@ _Last updated: 2026-11-22 · branch `fix/remove-unused-files` (not yet merged)_
   read "After Round N", not "Final <year> standings".
 - **Jolpica "After Round" label:** on 2026-11-21 Jolpica reported round 21 before that
   race had run (points unchanged), so the label can run ahead of the results.
-- **Jolpica-only schedule cards** show 00:00 for a race with no time yet (timezone
-  code, step 4). Circuit facts and insights don't show (keyed by OpenF1 race names).
+- **Jolpica-only calendar:** circuit facts and race insights don't show (they are
+  keyed by OpenF1 race names).
+- **"Times shown in ..." line** under the Schedule heading uses today's offset, which
+  can differ from a race's offset in another month for daylight-saving zones (the
+  cards themselves are correct per race date).
+- **Time zone fallback:** if a browser can't report its zone, the site falls back to
+  India (`Asia/Kolkata`).
 - **Calendar source:** the race list itself still comes from OpenF1 meetings. Only the
   round numbers come from Jolpica. `CLAUDE.md` names Jolpica as the calendar source.
 - **Driver photos in standings:** `src/sections/StandingsSection.tsx:136` shows OpenF1
@@ -79,10 +96,5 @@ _Last updated: 2026-11-22 · branch `fix/remove-unused-files` (not yet merged)_
 - **HowToWatch shows literal `\u00b7`:** `src/sections/HowToWatchSection.tsx:43,50`
   use `\u00b7` in plain JSX string attributes, where JS escapes aren't processed.
   The badges read "WORLDWIDE \u00b7 OFFICIAL" instead of "WORLDWIDE · OFFICIAL".
-- **Timezone label:**
-  - `src/components/ExpandableRaceCard.tsx:82` session rows are always UTC (hardcoded
-    "UTC") while the card's race time uses the selected timezone.
-  - The label is built from the IANA ID (e.g. "Kolkata"), not the picker's names
-    (e.g. "India"), and starts as "Mumbai (GMT+5:30)" before the effect runs.
 - **Miami start time** differs between APIs (OpenF1 17:00Z, Jolpica 20:00Z).
   Matching still works; one source is wrong.
