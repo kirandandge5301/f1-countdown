@@ -1,10 +1,15 @@
 # Project Status
 
-_Last updated: 2026-11-22 · branch `fix/static-fallback` (`4ef06b8`, not yet merged)_
+_Last updated: 2026-11-22 · branch `fix/remove-unused-files` (not yet merged)_
 
 ## Done
 
-- **Static fallback removed (step 3/5)** - `fix/static-fallback`, `4ef06b8`
+- **Unused code deleted** - `fix/remove-unused-files`
+  - Removed 5 files nothing imported: `src/f1api.ts`, `src/hooks/useF1Schedule.ts`,
+    `src/data/standings.ts`, `src/data/races.ts` (hard-coded 2026 calendar) and
+    `src/data/raceLogic.ts` (old next-race logic that only used `races.ts`).
+    Build passes. Restorable from git history if ever needed.
+- **Static fallback removed (step 3/5)** - merged in `4ef06b8`
   - If the calendar can't be loaded, the hero and schedule show an error card with
     Retry ("Couldn't load the race calendar right now."). The hard-coded `races.ts`
     calendar is no longer used anywhere; old data is cleared, never shown as live.
@@ -68,8 +73,6 @@ _Last updated: 2026-11-22 · branch `fix/static-fallback` (`4ef06b8`, not yet me
   headshots. `CLAUDE.md` design rules say no driver photos anywhere. Needs a decision.
 - **Constructor colors:** hardcoded `TEAM_COLORS` map in `src/services/openf1.ts`.
 - **Cancelled single sessions** inside a non-cancelled weekend are not filtered yet.
-- **Unused code:** `src/f1api.ts` + `src/hooks/useF1Schedule.ts`, `src/data/standings.ts`,
-  `src/data/races.ts` (hard-coded 2026 calendar, no longer imported). Safe to delete.
 
 ## Known open bugs
 
