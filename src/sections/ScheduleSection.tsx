@@ -1,12 +1,23 @@
 import { useTimezone } from '@/context/TimezoneContext';
 import { useData } from '@/context/DataContext';
 import ExpandableRaceCard from '@/components/ExpandableRaceCard';
+import CalendarErrorCard from '@/components/CalendarErrorCard';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import type { RaceWeekend, Session } from '@/services/openf1';
 
 export default function ScheduleSection() {
   const { timezone, timezoneLabel } = useTimezone();
-  const { raceWeekends, totalRounds, activeSeason, seasonStatus, loading } = useData();
+  const {
+    raceWeekends,
+    totalRounds,
+    activeSeason,
+    seasonStatus,
+    calendarError,
+    calendarLoading,
+    refreshCalendar,
+    loading: initialLoading
+  } = useData();
+  const loading = initialLoading || calendarLoading;
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLElement>({ threshold: 0.1 });
 
   const now = new Date();
@@ -44,6 +55,8 @@ export default function ScheduleSection() {
               <div key={i} className="h-24 rounded-2xl bg-[var(--bg-surface)] animate-pulse" />
             ))}
           </div>
+        ) : calendarError ? (
+          <CalendarErrorCard message={calendarError} onRetry={() => refreshCalendar()} />
         ) : raceWeekends.length === 0 && seasonStatus === 'not-published' ? (
           <p className="text-sm text-[var(--text-secondary)]">
             The {activeSeason} calendar hasn't been published yet.

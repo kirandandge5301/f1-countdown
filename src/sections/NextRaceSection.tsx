@@ -4,13 +4,23 @@ import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import CountdownDisplay from '@/components/CountdownDisplay';
 import SessionCard from '@/components/SessionCard';
 import RaceInsight from '@/components/RaceInsight';
+import CalendarErrorCard from '@/components/CalendarErrorCard';
 import { getSessionDisplayName } from '@/services/openf1';
 import type { Session } from '@/services/openf1';
 import { CIRCUIT_INFO } from '@/data/circuitInfo';
 
 export default function NextRaceSection() {
   const { timezoneLabel } = useTimezone();
-  const { nextRace, heroState, totalRounds, loading } = useData();
+  const {
+    nextRace,
+    heroState,
+    totalRounds,
+    calendarError,
+    calendarLoading,
+    refreshCalendar,
+    loading: initialLoading
+  } = useData();
+  const loading = initialLoading || calendarLoading;
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLDivElement>({ threshold: 0.1 });
 
   const race = nextRace?.race;
@@ -66,6 +76,10 @@ export default function NextRaceSection() {
           <div className="animate-pulse space-y-8 text-center">
             <div className="h-12 w-64 mx-auto bg-[var(--bg-surface)] rounded-xl" />
             <div className="h-32 bg-[var(--bg-surface)] rounded-2xl" />
+          </div>
+        ) : calendarError ? (
+          <div className="py-20">
+            <CalendarErrorCard message={calendarError} onRetry={() => refreshCalendar()} />
           </div>
         ) : heroState?.kind === 'complete' ? (
           <div className="text-center py-20">

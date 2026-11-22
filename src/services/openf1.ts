@@ -72,6 +72,8 @@ export interface RaceWeekend {
 export interface RaceWeekendsResult {
   weekends: RaceWeekend[];
   totalRounds: number;
+  /** true when OpenF1 could not be reached (as opposed to answering with nothing) */
+  failed?: boolean;
 }
 
 export interface SeasonCalendar extends RaceWeekendsResult {
@@ -149,7 +151,8 @@ async function fetchJSON<T>(endpoint: string): Promise<T | null> {
 
 // ======= MEETINGS (RACES) =======
 
-export async function fetchMeetings(year: number): Promise<Meeting[]> {
+/** OpenF1 meetings for a year. null = the request failed ([] = it worked, nothing there). */
+export async function fetchMeetings(year: number): Promise<Meeting[] | null> {
   const cacheKey = `meetings_${year}`;
   const cached = getCached<Meeting[]>(cacheKey);
   if (cached) return cached;
@@ -164,12 +167,13 @@ export async function fetchMeetings(year: number): Promise<Meeting[]> {
     setCache(cacheKey, races);
     return races;
   }
-  return [];
+  return null;
 }
 
 // ======= SESSIONS =======
 
-export async function fetchSessions(year: number): Promise<Session[]> {
+/** OpenF1 sessions for a year. null = the request failed ([] = it worked, nothing there). */
+export async function fetchSessions(year: number): Promise<Session[] | null> {
   const cacheKey = `sessions_${year}`;
   const cached = getCached<Session[]>(cacheKey);
   if (cached) return cached;
@@ -179,7 +183,7 @@ export async function fetchSessions(year: number): Promise<Session[]> {
     setCache(cacheKey, data);
     return data;
   }
-  return [];
+  return null;
 }
 
 export async function fetchSessionsForMeeting(meetingKey: number): Promise<Session[]> {
@@ -343,6 +347,8 @@ export async function fetchRaceWeekends(year: number): Promise<RaceWeekendsResul
     fetchJolpicaCalendar(year)
   ]);
 
+  // A failed request is not cached and not mistaken for "no races": callers can retry
+  if (!meetings || !allSessions) return { weekends: [], totalRounds: 0, failed: true };
   if (!meetings.length) return { weekends: [], totalRounds: 0 };
 
   const unnumbered: RaceWeekend[] = meetings.map(meeting => {
@@ -454,8 +460,9 @@ export function weekendsFromJolpica(races: JolpicaRace[], year: number): RaceWee
  * - 'live': OpenF1 weekends (rounds from Jolpica, as before)
  * - 'provisional': OpenF1 has nothing yet, so weekends come from Jolpica race dates
  * - 'not-published': both answered, neither has this season yet
- * - 'unavailable': the data couldn't be loaded (or OpenF1 has meetings but their
- *   sessions failed to load), so we can't say whether the calendar exists
+ * - 'unavailable': the data couldn't be loaded (OpenF1 unreachable, or it lists
+ *   meetings but no sessions), so we can't say whether the calendar exists.
+ *   The UI shows an error with Retry; there is no static fallback calendar.
  */
 export async function fetchSeasonCalendar(year: number): Promise<SeasonCalendar> {
   const live = await fetchRaceWeekends(year);
@@ -474,13 +481,14 @@ export async function fetchSeasonCalendar(year: number): Promise<SeasonCalendar>
     };
   }
 
-  // OpenF1 listing meetings for this year means a calendar exists: never call it "not published"
-  const openF1HasMeetings = live.weekends.length > 0;
+  // "Not published" only when both services answered and neither has the season.
+  // OpenF1 down, or listing meetings without sessions, means we can't tell.
+  const openF1Problem = live.failed === true || live.weekends.length > 0;
   return {
     weekends: [],
     totalRounds: 0,
     year,
-    status: jolpica && !openF1HasMeetings ? 'not-published' : 'unavailable',
+    status: jolpica && !openF1Problem ? 'not-published' : 'unavailable',
   };
 }
 

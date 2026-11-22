@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { RACES as FALLBACK_RACES } from '@/data/races';
 import {
   fetchSeasonCalendar,
   getActiveSeason,
@@ -10,8 +9,7 @@ import {
   type SeasonStatus
 } from '@/services/openf1';
 
-// Year the static fallback calendar belongs to, read from its own data
-const FALLBACK_YEAR = FALLBACK_RACES.length ? new Date(FALLBACK_RACES[0].date).getUTCFullYear() : NaN;
+const CALENDAR_ERROR = "Couldn't load the race calendar right now.";
 
 const DataContext = createContext<any>({
   raceWeekends: [],
@@ -19,6 +17,8 @@ const DataContext = createContext<any>({
   heroState: null,
   activeSeason: new Date().getUTCFullYear(),
   seasonStatus: null,
+  calendarError: null,
+  calendarLoading: false,
   totalRounds: 0,
   driverStandings: [],
   constructorStandings: [],
@@ -29,6 +29,7 @@ const DataContext = createContext<any>({
   standingsLoading: false,
   loading: true,
   refresh: () => {},
+  refreshCalendar: () => {},
   refreshStandings: () => {},
 });
 
@@ -38,6 +39,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [heroState, setHeroState] = useState<HeroState | null>(null);
   const [activeSeason, setActiveSeason] = useState<number>(() => new Date().getUTCFullYear());
   const [seasonStatus, setSeasonStatus] = useState<SeasonStatus | null>(null);
+  const [calendarError, setCalendarError] = useState<string | null>(null);
   const [totalRounds, setTotalRounds] = useState<number>(0);
   const [driverStandings, setDriverStandings] = useState<any[]>([]);
   const [constructorStandings, setConstructorStandings] = useState<any[]>([]);
@@ -46,6 +48,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [standingsRound, setStandingsRound] = useState<number | null>(null);
   const [standingsFinalSeason, setStandingsFinalSeason] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // No static fallback: if the calendar can't be loaded we say so (error + Retry)
+  // instead of showing hard-coded dates as if they were live.
+  const failCalendar = useCallback(() => {
+    setRaceWeekends([]);
+    setNextRace(null);
+    setHeroState(null);
+    setTotalRounds(0);
+    setSeasonStatus('unavailable');
+    setCalendarError(CALENDAR_ERROR);
+  }, []);
 
   const loadCalendar = useCallback(async () => {
     try {
@@ -57,44 +70,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const season = getActiveSeason(now, { [thisYear]: current.weekends });
       const shown = season === thisYear ? current : await fetchSeasonCalendar(season);
 
-      let weekends = shown.weekends;
-      let total = shown.totalRounds;
-      let status = shown.status;
-
-      // Fall back to static data if API fails or returns empty — only when the
-      // static calendar is for the season being shown (never show it as another year)
-      if (weekends.length === 0 && FALLBACK_YEAR === season) {
-        console.warn('OpenF1 API returned no races, using fallback calendar');
-        weekends = FALLBACK_RACES.map((r: any) => ({
-          round: r.round,
-          meeting: {
-            meeting_name: r.gp,
-            circuit_short_name: r.circuit,
-            country_code: r.country,
-          },
-          sessions: Object.entries(r.sessions || {}).map(([key, date]: any) => ({
-            session_key: Date.now(),
-            session_type: key,
-            date_start: date,
-          })),
-          isSprint: !!r.sprint,
-        })) as any;
-        total = weekends.length;
-        status = 'live';
+      if (shown.status === 'unavailable') {
+        console.error(`Race calendar for ${season} could not be loaded`);
+        setActiveSeason(season);
+        failCalendar();
+        return;
       }
 
-      const hero = getHeroState(now, { year: season, weekends, status });
+      const hero = getHeroState(now, { year: season, weekends: shown.weekends, status: shown.status });
 
       setActiveSeason(season);
-      setSeasonStatus(status);
-      setRaceWeekends(weekends);
-      setTotalRounds(total);
+      setSeasonStatus(shown.status);
+      setRaceWeekends(shown.weekends);
+      setTotalRounds(shown.totalRounds);
       setHeroState(hero);
       setNextRace(hero.kind === 'race' ? hero.next : null);
+      setCalendarError(null);
     } catch (error) {
       console.error('Error loading calendar:', error);
+      failCalendar();
     }
-  }, []);
+  }, [failCalendar]);
 
   const loadStandings = useCallback(async () => {
     try {
@@ -136,7 +132,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const refresh = () => loadData();
 
-  // Reload only standings (e.g. Retry button) without flashing the calendar sections
+  // Retry buttons reload only their own part, so the other sections don't flash
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const refreshCalendar = async () => {
+    setCalendarLoading(true);
+    try {
+      await loadCalendar();
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
   const [standingsLoading, setStandingsLoading] = useState(false);
   const refreshStandings = async () => {
     setStandingsLoading(true);
@@ -154,6 +160,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       heroState,
       activeSeason,
       seasonStatus,
+      calendarError,
+      calendarLoading,
       totalRounds,
       driverStandings,
       constructorStandings,
@@ -164,6 +172,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       standingsLoading,
       loading,
       refresh,
+      refreshCalendar,
       refreshStandings,
     }}>
       {children}
