@@ -1,10 +1,21 @@
 # Project Status
 
-_Last updated: 2026-11-21 · branch `fix/season-rollover` (`0fb7fad`, not yet merged)_
+_Last updated: 2026-11-22 · branch `fix/static-fallback` (`4ef06b8`, not yet merged)_
 
 ## Done
 
-- **Season rollover (step 2/5)** - `fix/season-rollover`, `0fb7fad`
+- **Static fallback removed (step 3/5)** - `fix/static-fallback`, `4ef06b8`
+  - If the calendar can't be loaded, the hero and schedule show an error card with
+    Retry ("Couldn't load the race calendar right now."). The hard-coded `races.ts`
+    calendar is no longer used anywhere; old data is cleared, never shown as live.
+  - Retry reloads only the calendar (standings and calendar retry separately).
+  - OpenF1 meetings/sessions now return `null` on failure (not `[]`) and failures are
+    never cached, so Retry gets fresh data.
+  - "calendar coming soon" only when both APIs answered; OpenF1 down reads as an error.
+  - Files: `src/services/openf1.ts`, `src/context/DataContext.tsx`,
+    `src/sections/NextRaceSection.tsx`, `src/sections/ScheduleSection.tsx`, new
+    `src/components/CalendarErrorCard.tsx`.
+- **Season rollover (step 2/5)** - merged in `0fb7fad`
   - No year typed in code: `getActiveSeason` shows this year while a race is
     unfinished, otherwise next year. Header, schedule heading and footer follow it.
   - Off-season hero: next season's first race weekend (OpenF1); if only Jolpica has
@@ -15,7 +26,7 @@ _Last updated: 2026-11-21 · branch `fix/season-rollover` (`0fb7fad`, not yet me
     labelled "Final <year> standings" (not an error).
   - OpenF1 requests retry briefly on HTTP 429 (rate limit). Meetings without sessions
     no longer count as a loaded calendar.
-  - `races.ts` fallback is only used when its dates match the season shown.
+  - (`races.ts` guard added here was superseded: the fallback is gone in step 3.)
 - **Round numbers (step 1/5)** - merged in `da119aa`
   - Cancelled meetings (`is_cancelled`, e.g. Bahrain and Saudi Arabia 2026) are dropped
     at load, so they never reach the hero, schedule or next-race logic.
@@ -24,18 +35,22 @@ _Last updated: 2026-11-21 · branch `fix/season-rollover` (`0fb7fad`, not yet me
   - If Jolpica fails or any weekend can't be matched, ALL weekends use sequential
     numbering by date, with one console warning (never a mix of the two).
   - "/ 24" and "24 ROUNDS" replaced by `totalRounds` (Jolpica count, else weekend count).
-  - Season year lives in one constant: `SEASON_YEAR` in `src/services/openf1.ts`.
+  - Season year constant `SEASON_YEAR` (removed again in step 2).
   - Files: `src/services/openf1.ts`, `src/context/DataContext.tsx`,
     `src/sections/NextRaceSection.tsx`, `src/sections/ScheduleSection.tsx`.
 - **Standings on Jolpica** (`ab77165`): live points and wins, "Last updated" line,
   honest error card. Retry reloads standings only.
 - **India broadcaster** (`6534024`): secondary card is now FanCode.
 
-## Still open (audit steps 2-5 and other items)
+## Still open (audit steps 4-5 and other items)
 
-- **Static calendar fallback:** if the APIs return nothing, `src/data/races.ts` (2026
-  data) is shown as if live, which breaks the "never show stale data as live" rule
-  (step 3). Since step 2 it is only used when its year matches the season shown.
+- **No "last known calendar":** when the calendar can't load there is only the error
+  card. Showing the last good calendar labelled "as of ..." would need browser storage
+  (allowed by `CLAUDE.md`, not built).
+- **OpenF1 down during a season:** the hero shows Jolpica race dates with a race-start
+  countdown labelled "times confirmed closer to the date", which is slightly off for an
+  in-season race. If OpenF1 lists races but no sessions and Jolpica has none, the
+  error card shows (wording is blunt).
 - **Off-season countdown target:** with OpenF1 data the hero counts to the next
   session (e.g. Practice 1), not the race itself. Only the Jolpica-only case counts
   to race start. Confirm which is wanted.
@@ -53,7 +68,8 @@ _Last updated: 2026-11-21 · branch `fix/season-rollover` (`0fb7fad`, not yet me
   headshots. `CLAUDE.md` design rules say no driver photos anywhere. Needs a decision.
 - **Constructor colors:** hardcoded `TEAM_COLORS` map in `src/services/openf1.ts`.
 - **Cancelled single sessions** inside a non-cancelled weekend are not filtered yet.
-- **Unused code:** `src/f1api.ts` + `src/hooks/useF1Schedule.ts`, `src/data/standings.ts`.
+- **Unused code:** `src/f1api.ts` + `src/hooks/useF1Schedule.ts`, `src/data/standings.ts`,
+  `src/data/races.ts` (hard-coded 2026 calendar, no longer imported). Safe to delete.
 
 ## Known open bugs
 
