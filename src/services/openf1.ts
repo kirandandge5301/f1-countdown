@@ -186,21 +186,6 @@ export async function fetchSessions(year: number): Promise<Session[] | null> {
   return null;
 }
 
-export async function fetchSessionsForMeeting(meetingKey: number): Promise<Session[]> {
-  const cacheKey = `sessions_meeting_${meetingKey}`;
-  const cached = getCached<Session[]>(cacheKey);
-  if (cached) return cached;
-
-  const data = await fetchJSON<Session[]>(`/sessions?meeting_key=${meetingKey}`);
-  if (data) {
-    // Sort by date
-    data.sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime());
-    setCache(cacheKey, data);
-    return data;
-  }
-  return [];
-}
-
 // ======= JOLPICA CALENDAR (official round numbers) =======
 
 /**
