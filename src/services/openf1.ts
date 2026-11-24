@@ -493,6 +493,24 @@ export async function fetchSeasonCalendar(year: number): Promise<SeasonCalendar>
   };
 }
 
+/**
+ * The highest round whose race has finished by `now` (0 if none). Pure.
+ * Used to keep "After Round N" honest: Jolpica can report round N as soon as that
+ * weekend's qualifying is in, while the points are still those after round N-1.
+ */
+export function lastFinishedRound(weekends: RaceWeekend[], now: Date): number {
+  const nowMs = now.getTime();
+  let last = 0;
+  for (const w of weekends) {
+    if (w.meeting.is_cancelled) continue;
+    const race = w.sessions.find(s => s.session_name === 'Race' && !s.is_cancelled);
+    // No race time known: it counts as finished once its race day is over
+    const finishedAt = race ? sessionEndTime(race) : new Date(w.meeting.date_end).getTime();
+    if (finishedAt <= nowMs) last = Math.max(last, w.round);
+  }
+  return last;
+}
+
 export type SeasonStatus = 'live' | 'provisional' | 'not-published' | 'unavailable';
 
 export type HeroState =

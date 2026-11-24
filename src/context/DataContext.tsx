@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import {
   fetchSeasonCalendar,
   getActiveSeason,
   getHeroState,
+  lastFinishedRound,
   fetchEnrichedDriverStandings,
   fetchEnrichedConstructorStandings,
   type HeroState,
@@ -45,9 +46,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [constructorStandings, setConstructorStandings] = useState<any[]>([]);
   const [standingsError, setStandingsError] = useState<string | null>(null);
   const [standingsUpdatedAt, setStandingsUpdatedAt] = useState<Date | null>(null);
-  const [standingsRound, setStandingsRound] = useState<number | null>(null);
+  // The round Jolpica reports for the standings (can run ahead of the points, see below)
+  const [standingsReportedRound, setStandingsReportedRound] = useState<number | null>(null);
   const [standingsFinalSeason, setStandingsFinalSeason] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // "After Round N" only for a race that has really finished. Jolpica may report round N
+  // once that weekend's qualifying is in, while the points are still those after N-1.
+  // If the calendar isn't available we can't verify the round, so we show none.
+  const standingsRound = useMemo(() => {
+    if (!standingsReportedRound || standingsFinalSeason) return null;
+    const finished = lastFinishedRound(raceWeekends, new Date());
+    return finished > 0 ? Math.min(standingsReportedRound, finished) : null;
+  }, [standingsReportedRound, standingsFinalSeason, raceWeekends]);
 
   // No static fallback: if the calendar can't be loaded we say so (error + Retry)
   // instead of showing hard-coded dates as if they were live.
@@ -102,7 +113,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       setDriverStandings(drivers.standings);
       setConstructorStandings(constructors.standings);
-      setStandingsRound(drivers.round || constructors.round || null);
+      setStandingsReportedRound(drivers.round || constructors.round || null);
       setStandingsFinalSeason(drivers.isFinal ? drivers.season : null);
       setStandingsUpdatedAt(new Date());
       setStandingsError(null);
@@ -110,7 +121,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       console.error('Error loading standings:', error);
       setDriverStandings([]);
       setConstructorStandings([]);
-      setStandingsRound(null);
+      setStandingsReportedRound(null);
       setStandingsFinalSeason(null);
       setStandingsUpdatedAt(null);
       setStandingsError("Couldn't load standings right now.");
