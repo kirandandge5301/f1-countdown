@@ -1,9 +1,15 @@
 # Project Status
 
-_Last updated: 2026-11-22 · all work merged to `main`_
+_Last updated: 2026-11-25 · branch `fix/timezone-fallback` (`c83eddb`, not yet merged)_
 
 ## Done
 
+- **Time zone fallback** - `fix/timezone-fallback`, `c83eddb`
+  - If the browser can't report its zone, the site now falls back to GMT (neutral),
+    not India. Before: a failed lookup showed India times as the visitor's own, an
+    empty result crashed the page, an invalid id showed "--:--".
+  - Only a valid zone is accepted; a corrupted saved choice is ignored.
+  - Files: `src/data/timezones.ts`, `src/context/TimezoneContext.tsx`.
 - **Time zone display (step 4/5)** - merged
   - Race cards showed the first practice time as the race time (code looked for
     session type `'race'`, OpenF1 uses `'Race'`). Now uses the session named "Race";
@@ -82,8 +88,6 @@ _Last updated: 2026-11-22 · all work merged to `main`_
 - **"Times shown in ..." line** under the Schedule heading uses today's offset, which
   can differ from a race's offset in another month for daylight-saving zones (the
   cards themselves are correct per race date).
-- **Time zone fallback:** if a browser can't report its zone, the site falls back to
-  India (`Asia/Kolkata`).
 - **Calendar source:** the race list itself still comes from OpenF1 meetings. Only the
   round numbers come from Jolpica. `CLAUDE.md` names Jolpica as the calendar source.
 - **Driver photos in standings:** `src/sections/StandingsSection.tsx:136` shows OpenF1
