@@ -1,9 +1,33 @@
 # Project Status
 
-_Last updated: 2026-11-25 · all work merged to `main`_
+_Last updated: 2026-11-25 · branch `fix/team-colors-data` (tip of 7 stacked branches, not yet merged)_
 
 ## Done
 
+- **Calendar and live-state batch (7 stacked branches, not merged)**
+  - **Jolpica is the calendar source** (`3decf76`): race list, names, rounds, dates and
+    cancellations come from Jolpica; OpenF1 adds session times, matched by start time
+    (never by name). Where OpenF1 has no sessions for a weekend, Jolpica's own schedule
+    is used and the hero says times are confirmed closer to the date. Jolpica's names
+    fix Brazil's missing circuit insights, and the Sepang race no longer shows Bahrain's facts.
+  - **Cancelled sessions** (`ddc6f52`): skipped everywhere; removed the unused
+    `fetchSessionsForMeeting` that did not filter them.
+  - **"After Round N"** (`597f546`): capped at the last race that has really finished
+    (Jolpica reports round N once qualifying is in, with round N-1 points).
+  - **LIVE state** (`6bad8eb`): while a session is under way the hero says "LIVE NOW" and
+    the session, with "Next: ... in ..."; no more skipping ahead or 00:00:00:00.
+  - **The page updates itself** (`22a9e1b`): the hero changes when a session starts or ends,
+    the next season loads in the background after the final race, and data refreshes every
+    15 min and when the tab returns. A failed background refresh keeps data on screen.
+  - **Last known calendar** (`00a2bfb`): every good load is saved in the browser; if a load
+    fails the page shows it labelled "as of <time>" with Retry (max 30 days old, season
+    not over). With nothing usable: the error card.
+  - **Team colours** (`953e800`): own documented file `src/data/teamColors.ts`; an unknown
+    team gets a grey ring and a console warning.
+  - Files: `src/services/openf1.ts`, `src/services/calendarCache.ts` (new),
+    `src/context/DataContext.tsx`, `src/data/teamColors.ts` (new),
+    `src/components/StaleCalendarNotice.tsx` (new), `SessionCard.tsx`,
+    `ExpandableRaceCard.tsx`, `NextRaceSection.tsx`, `ScheduleSection.tsx`.
 - **How to watch badges fixed** - merged
   - The two default cards showed raw escape text (\u00b7) instead of a dot, because
     JSX string attributes do not process JS escapes. Now a real "·":
@@ -78,35 +102,40 @@ _Last updated: 2026-11-25 · all work merged to `main`_
   honest error card. Retry reloads standings only.
 - **India broadcaster** (`6534024`): secondary card is now FanCode.
 
-## Still open (audit steps 4-5 and other items)
+## Still open
 
-- **No "last known calendar":** when the calendar can't load there is only the error
-  card. Showing the last good calendar labelled "as of ..." would need browser storage
-  (allowed by `CLAUDE.md`, not built).
-- **OpenF1 down during a season:** the hero shows Jolpica race dates with a race-start
-  countdown labelled "times confirmed closer to the date", which is slightly off for an
-  in-season race. If OpenF1 lists races but no sessions and Jolpica has none, the
-  error card shows (wording is blunt).
-- **Off-season countdown target:** with OpenF1 data the hero counts to the next
-  session (e.g. Practice 1), not the race itself. Only the Jolpica-only case counts
-  to race start. Confirm which is wanted.
-- **Rollover needs a reload:** a page left open across the final race keeps showing
-  the old season until refreshed. During a race the hero reads 00:00:00:00.
+- **Decision for you: OpenF1 as a fallback calendar.** Jolpica is now the source of the
+  race list. Only when Jolpica has no calendar for a season (2027 today, until Jolpica
+  publishes it) or is down, the page falls back to OpenF1's own list, with rounds numbered
+  by date. This keeps the off-season countdown working, but it is an exception to
+  "OpenF1 is for session times only". Removing the fallback means the page says
+  "2027 calendar coming soon" until Jolpica has the season.
+- **OpenF1 and Jolpica times can disagree.** Miami: OpenF1's race start is 3 h earlier
+  than Jolpica's. The page shows OpenF1's (as the rules say); consider preferring
+  Jolpica when they differ by more than an hour.
+- **Missing circuit facts / insights:** no insights for Barcelona, Las Vegas, Qatar and
+  "Bahrain Grand Prix in Malaysia"; the circuit fact box exists for only 6 races
+  (`src/data/circuitInfo.ts`, `src/data/gp-insights.ts`, keyed by Jolpica race name).
+- **"After Round N" just after a race:** capped to finished races, but between the end of
+  a race and Jolpica adding its results the label can say Round N with points after N-1.
 - **"Final" label timing:** from the last race until Jolpica switches season, standings
   read "After Round N", not "Final <year> standings".
-- **Jolpica "After Round" label:** on 2026-11-21 Jolpica reported round 21 before that
-  race had run (points unchanged), so the label can run ahead of the results.
-- **Jolpica-only calendar:** circuit facts and race insights don't show (they are
-  keyed by OpenF1 race names).
+- **Next season fails to load after the final race:** the hero shows "<year> season
+  complete · <next year> calendar coming soon" until a background refresh (every 15 min)
+  succeeds.
+- **Saved calendar covers the calendar only.** Standings keep their error card + Retry;
+  a failed background refresh keeps old standings with their "Last updated" time.
+- **Hero label while live** still reads "NEXT RACE WEEKEND" above the "LIVE NOW" block.
+- **Off-season countdown target:** the hero counts to the next session (e.g. Practice 1),
+  not the race itself. Confirm which is wanted.
 - **"Times shown in ..." line** under the Schedule heading uses today's offset, which
   can differ from a race's offset in another month for daylight-saving zones (the
   cards themselves are correct per race date).
-- **Calendar source:** the race list itself still comes from OpenF1 meetings. Only the
-  round numbers come from Jolpica. `CLAUDE.md` names Jolpica as the calendar source.
-- **Constructor colors:** hardcoded `TEAM_COLORS` map in `src/services/openf1.ts`.
-- **Cancelled single sessions** inside a non-cancelled weekend are not filtered yet.
+- **Team colours are approximations** (`src/data/teamColors.ts`); the Audi and Cadillac
+  values were picked by Claude, not taken from an official source.
+- **Testing note:** Jolpica answers 403 to Node's default client (a bot filter; browsers
+  are fine), so scripts that call Jolpica from Node need saved data.
 
 ## Known open bugs
 
-- **Miami start time** differs between APIs (OpenF1 17:00Z, Jolpica 20:00Z).
-  Matching still works; one source is wrong.
+- None known right now.
