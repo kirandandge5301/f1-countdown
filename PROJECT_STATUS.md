@@ -1,9 +1,17 @@
 # Project Status
 
-_Last updated: 2026-11-25 · branch `fix/timezone-fallback` (`c83eddb`, not yet merged)_
+_Last updated: 2026-11-25 · branch `fix/remove-driver-photos` (`496d1df`, not yet merged)_
 
 ## Done
 
+- **Driver photos removed** - `fix/remove-driver-photos`, `496d1df`
+  - Standings no longer hotlink official F1 headshots (design rule: no driver photos).
+    The Drivers tab shows the car number (initials if none) in a team-colour ring.
+  - The OpenF1 `/drivers` request, `fetchDrivers`, `DriverInfo` and `headshotUrl` are
+    gone: standings come entirely from Jolpica; OpenF1 is only used for the calendar
+    and session times.
+  - Files: `src/sections/StandingsSection.tsx`, `src/services/openf1.ts`.
+  - `CLAUDE.md` data rule updated: OpenF1 is for session times only.
 - **Time zone fallback** - `fix/timezone-fallback`, `c83eddb`
   - If the browser can't report its zone, the site now falls back to GMT (neutral),
     not India. Before: a failed lookup showed India times as the visitor's own, an
@@ -90,8 +98,6 @@ _Last updated: 2026-11-25 · branch `fix/timezone-fallback` (`c83eddb`, not yet 
   cards themselves are correct per race date).
 - **Calendar source:** the race list itself still comes from OpenF1 meetings. Only the
   round numbers come from Jolpica. `CLAUDE.md` names Jolpica as the calendar source.
-- **Driver photos in standings:** `src/sections/StandingsSection.tsx:136` shows OpenF1
-  headshots. `CLAUDE.md` design rules say no driver photos anywhere. Needs a decision.
 - **Constructor colors:** hardcoded `TEAM_COLORS` map in `src/services/openf1.ts`.
 - **Cancelled single sessions** inside a non-cancelled weekend are not filtered yet.
 
