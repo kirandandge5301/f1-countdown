@@ -40,14 +40,14 @@ export default function HowToWatchSection() {
         <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
           <BroadcastCard
             variant="red"
-            badge="WORLDWIDE \u00b7 OFFICIAL"
+            badge="WORLDWIDE · OFFICIAL"
             title="F1 TV Pro."
             description="The official Formula 1 streaming service. Every practice, qualifying, sprint and race &mdash; plus team radio, onboard cameras and live timing."
             href="https://f1tv.formula1.com/"
           />
           <BroadcastCard
             variant="dark"
-            badge="UNITED KINGDOM \u00b7 IRELAND"
+            badge="UNITED KINGDOM · IRELAND"
             title="Sky Sports F1."
             description="The home of Formula 1 in the UK with full race weekend coverage."
             href="https://www.skysports.com/f1"
