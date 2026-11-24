@@ -28,13 +28,17 @@ export default function NextRaceSection() {
   const allSessions = nextRace?.allSessions || [];
   const nextSessionTime = nextSession ? new Date(nextSession.date_start) : null;
 
-  // Off-season: calendar known only from Jolpica race dates (no OpenF1 sessions yet)
+  // Times taken from Jolpica's schedule because OpenF1 has no sessions for this weekend yet
   const isProvisional = heroState?.kind === 'race' && heroState.provisional;
+  // With no time at all, show the race day (meeting.date_end is the race day then)
   const provisionalDate = isProvisional && race
-    ? new Date(race.meeting.date_start).toLocaleDateString(undefined, {
+    ? new Date(race.meeting.date_end).toLocaleDateString(undefined, {
         timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric'
       })
     : null;
+  const provisionalLabel = nextSession
+    ? `${nextSession.session_name === 'Race' ? 'Race start' : getSessionDisplayName(nextSession)} · times confirmed closer to the date`
+    : '';
 
   const circuitInfo = race ? CIRCUIT_INFO[race.meeting.meeting_name] : null;
 
@@ -128,7 +132,7 @@ export default function NextRaceSection() {
                 <CountdownDisplay targetTime={nextSessionTime} size="hero" />
                 {isProvisional && (
                   <p className="mt-6 text-sm text-[var(--text-secondary)]">
-                    Race start · times confirmed closer to the date
+                    {provisionalLabel}
                   </p>
                 )}
               </div>

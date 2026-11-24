@@ -31,7 +31,7 @@ export default function ExpandableRaceCard({
   // The offset depends on the date (daylight saving), so label it for this race's date
   const raceTimeLabel = raceSession
     ? buildTimezoneLabel(timezone, new Date(raceSession.date_start))
-    : formatShortDateInZone(race.provisional ? race.meeting.date_start : race.meeting.date_end, 'UTC');
+    : formatShortDateInZone(race.meeting.date_end, 'UTC'); // race day (UTC) when no start time is known
 
   const getSessionStatus = (session: Session) => {
     const sessionStart = new Date(session.date_start);
