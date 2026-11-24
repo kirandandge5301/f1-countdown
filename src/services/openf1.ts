@@ -442,11 +442,13 @@ export function getActiveSeason(
   const current = calendars[year];
   if (!current || current.length === 0) return year;
 
+  return hasUnfinishedRace(current, now) ? year : year + 1;
+}
+
+/** True while at least one (non-cancelled) race of these weekends has not finished. Pure. */
+export function hasUnfinishedRace(weekends: RaceWeekend[], now: Date): boolean {
   const nowMs = now.getTime();
-  const hasUnfinishedRace = current.some(
-    w => !w.meeting.is_cancelled && raceEndTime(w) > nowMs
-  );
-  return hasUnfinishedRace ? year : year + 1;
+  return weekends.some(w => !w.meeting.is_cancelled && raceEndTime(w) > nowMs);
 }
 
 /**

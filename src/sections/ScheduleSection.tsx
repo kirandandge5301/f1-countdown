@@ -2,6 +2,7 @@ import { useTimezone } from '@/context/TimezoneContext';
 import { useData } from '@/context/DataContext';
 import ExpandableRaceCard from '@/components/ExpandableRaceCard';
 import CalendarErrorCard from '@/components/CalendarErrorCard';
+import StaleCalendarNotice from '@/components/StaleCalendarNotice';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import type { RaceWeekend, Session } from '@/services/openf1';
 
@@ -13,6 +14,7 @@ export default function ScheduleSection() {
     activeSeason,
     seasonStatus,
     calendarError,
+    calendarStaleSince,
     calendarLoading,
     refreshCalendar,
     loading: initialLoading
@@ -48,6 +50,13 @@ export default function ScheduleSection() {
         <p className="text-base text-[var(--text-secondary)] max-w-[480px] mb-10">
           Every round of the FIA Formula One World Championship. Times shown in {timezoneLabel}.
         </p>
+
+        {/* The calendar below could not be refreshed: say so, and how old it is */}
+        {calendarStaleSince && !calendarError && !loading && (
+          <div className="mb-6">
+            <StaleCalendarNotice since={calendarStaleSince} onRetry={() => refreshCalendar()} />
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-4">

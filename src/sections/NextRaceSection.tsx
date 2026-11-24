@@ -5,6 +5,7 @@ import CountdownDisplay from '@/components/CountdownDisplay';
 import SessionCard from '@/components/SessionCard';
 import RaceInsight from '@/components/RaceInsight';
 import CalendarErrorCard from '@/components/CalendarErrorCard';
+import StaleCalendarNotice from '@/components/StaleCalendarNotice';
 import { getSessionDisplayName } from '@/services/openf1';
 import type { Session } from '@/services/openf1';
 import { CIRCUIT_INFO } from '@/data/circuitInfo';
@@ -16,6 +17,7 @@ export default function NextRaceSection() {
     heroState,
     totalRounds,
     calendarError,
+    calendarStaleSince,
     calendarLoading,
     refreshCalendar,
     loading: initialLoading
@@ -77,6 +79,12 @@ export default function NextRaceSection() {
       />
 
       <div className="relative z-10 max-w-6xl mx-auto w-full">
+        {/* The calendar below could not be refreshed: say so, and how old it is */}
+        {calendarStaleSince && !calendarError && !loading && (
+          <div className="mb-6 flex justify-center md:justify-start">
+            <StaleCalendarNotice since={calendarStaleSince} onRetry={() => refreshCalendar()} />
+          </div>
+        )}
         {loading ? (
           <div className="animate-pulse space-y-8 text-center">
             <div className="h-12 w-64 mx-auto bg-[var(--bg-surface)] rounded-xl" />

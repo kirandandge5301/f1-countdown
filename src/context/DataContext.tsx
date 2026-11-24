@@ -10,6 +10,7 @@ import {
   type HeroState,
   type SeasonStatus
 } from '@/services/openf1';
+import { saveCalendar, loadSavedCalendar } from '@/services/calendarCache';
 
 const CALENDAR_ERROR = "Couldn't load the race calendar right now.";
 
@@ -25,6 +26,7 @@ const DataContext = createContext<any>({
   activeSeason: new Date().getUTCFullYear(),
   seasonStatus: null,
   calendarError: null,
+  calendarStaleSince: null,
   calendarLoading: false,
   totalRounds: 0,
   driverStandings: [],
@@ -45,6 +47,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [activeSeason, setActiveSeason] = useState<number>(() => new Date().getUTCFullYear());
   const [seasonStatus, setSeasonStatus] = useState<SeasonStatus | null>(null);
   const [calendarError, setCalendarError] = useState<string | null>(null);
+  // Set when the calendar on screen could not be refreshed: when it was last loaded live
+  const [calendarStaleSince, setCalendarStaleSince] = useState<Date | null>(null);
   const [totalRounds, setTotalRounds] = useState<number>(0);
   const [driverStandings, setDriverStandings] = useState<any[]>([]);
   const [constructorStandings, setConstructorStandings] = useState<any[]>([]);
@@ -61,6 +65,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Whether there is good data on screen: a failed BACKGROUND refresh must not wipe it
   const hasCalendar = useRef(false);
+  const lastCalendarLoadAt = useRef<Date>(new Date());
   const hasStandings = useRef(false);
   const lastRefreshAt = useRef(Date.now());
   const lastRolloverTry = useRef(0);
@@ -81,18 +86,44 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return finished > 0 ? Math.min(standingsReportedRound, finished) : null;
   }, [standingsReportedRound, standingsFinalSeason, raceWeekends, now]);
 
-  // No static fallback: if the calendar can't be loaded we say so (error + Retry)
-  // instead of showing hard-coded dates as if they were live.
+  // Nothing to show at all: say so (error + Retry). No hard-coded fallback calendar.
   const failCalendar = useCallback(() => {
     hasCalendar.current = false;
     setRaceWeekends([]);
     setTotalRounds(0);
     setSeasonStatus('unavailable');
+    setCalendarStaleSince(null);
     setCalendarError(CALENDAR_ERROR);
   }, []);
 
-  // silent = a background refresh: if it fails, keep what is already on screen
-  const loadCalendar = useCallback(async (silent: boolean = false) => {
+  // The calendar could not be (re)loaded:
+  // 1. something is already on screen: keep it, and mark it as not fresh
+  // 2. nothing on screen but a saved calendar can still be trusted: show it, labelled "as of"
+  // 3. otherwise the error card
+  const calendarFailed = useCallback(() => {
+    if (hasCalendar.current) {
+      console.warn('Calendar could not be refreshed; keeping the calendar already on screen');
+      setCalendarStaleSince(lastCalendarLoadAt.current);
+      return;
+    }
+    const saved = loadSavedCalendar(new Date());
+    if (saved) {
+      console.warn('Calendar could not be loaded; showing the saved calendar');
+      hasCalendar.current = true;
+      lastCalendarLoadAt.current = saved.savedAt;
+      setActiveSeason(saved.season);
+      setSeasonStatus(saved.status);
+      setRaceWeekends(saved.weekends);
+      setTotalRounds(saved.totalRounds);
+      setCalendarError(null);
+      setCalendarStaleSince(saved.savedAt);
+      setNow(new Date());
+      return;
+    }
+    failCalendar();
+  }, [failCalendar]);
+
+  const loadCalendar = useCallback(async () => {
     try {
       const at = new Date();
       const thisYear = at.getUTCFullYear();
@@ -103,32 +134,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const shown = season === thisYear ? current : await fetchSeasonCalendar(season);
 
       if (shown.status === 'unavailable') {
-        if (silent && hasCalendar.current) {
-          console.warn('Calendar refresh failed; keeping the calendar already on screen');
-          return;
-        }
         console.error(`Race calendar for ${season} could not be loaded`);
-        setActiveSeason(season);
-        failCalendar();
+        calendarFailed();
         return;
       }
 
       hasCalendar.current = true;
+      lastCalendarLoadAt.current = new Date();
+      saveCalendar({ season, status: shown.status, totalRounds: shown.totalRounds, weekends: shown.weekends });
       setActiveSeason(season);
       setSeasonStatus(shown.status);
       setRaceWeekends(shown.weekends);
       setTotalRounds(shown.totalRounds);
       setCalendarError(null);
+      setCalendarStaleSince(null);
       setNow(new Date());
     } catch (error) {
-      if (silent && hasCalendar.current) {
-        console.warn('Calendar refresh failed; keeping the calendar already on screen', error);
-        return;
-      }
       console.error('Error loading calendar:', error);
-      failCalendar();
+      calendarFailed();
     }
-  }, [failCalendar]);
+  }, [calendarFailed]);
 
   const loadStandings = useCallback(async (silent: boolean = false) => {
     try {
@@ -176,7 +201,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Background refresh: no loading placeholders, nothing wiped if it fails
   const silentRefresh = useCallback(async () => {
     lastRefreshAt.current = Date.now();
-    await Promise.all([loadCalendar(true), loadStandings(true)]);
+    await Promise.all([loadCalendar(), loadStandings(true)]);
   }, [loadCalendar, loadStandings]);
 
   useEffect(() => {
@@ -255,6 +280,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       activeSeason,
       seasonStatus,
       calendarError,
+      calendarStaleSince,
       calendarLoading,
       totalRounds,
       driverStandings,
