@@ -497,6 +497,27 @@ export async function fetchSeasonCalendar(year: number): Promise<SeasonCalendar>
 }
 
 /**
+ * The next moment after `nowMs` at which what the page shows can change: a session
+ * starting or ending, or the end of a race day that has no known times. Pure.
+ * Returns null when nothing is left to happen.
+ */
+export function nextBoundaryTime(weekends: RaceWeekend[], nowMs: number): number | null {
+  let best: number | null = null;
+  const consider = (t: number) => {
+    if (Number.isFinite(t) && t > nowMs && (best === null || t < best)) best = t;
+  };
+  for (const w of weekends) {
+    // No known race start: the end of race day is when this weekend is over
+    if (!w.sessions.some(s => s.session_name === 'Race')) consider(new Date(w.meeting.date_end).getTime());
+    for (const s of w.sessions) {
+      consider(new Date(s.date_start).getTime());
+      consider(sessionEndTime(s));
+    }
+  }
+  return best;
+}
+
+/**
  * The highest round whose race has finished by `now` (0 if none). Pure.
  * Used to keep "After Round N" honest: Jolpica can report round N as soon as that
  * weekend's qualifying is in, while the points are still those after round N-1.
@@ -540,6 +561,16 @@ export function getHeroState(
 
   const next = findNextRace(season.weekends, now);
   if (!next) return { kind: 'none' };
+
+  // Every race is over and nothing is live or upcoming: the season is complete.
+  // (Reached when the next season hasn't loaded yet; we keep retrying in the background.)
+  if (
+    !next.nextSession && !next.liveSession && next.allSessions.length > 0 &&
+    new Date(next.race.meeting.date_end).getTime() <= now.getTime()
+  ) {
+    return { kind: 'complete', completedYear: season.year, nextYear: season.year + 1 };
+  }
+
   return {
     kind: 'race',
     next,
@@ -574,6 +605,12 @@ export function findNextRace(weekends: RaceWeekend[], now: Date = new Date()): N
 
     if (liveSession || nextSession) {
       return { race, nextSession, liveSession, allSessions: sorted };
+    }
+
+    // Sessions are over but the race has no known start time: race day is still ahead
+    const hasRaceSession = sorted.some(s => s.session_name === 'Race');
+    if (!hasRaceSession && new Date(race.meeting.date_end).getTime() > nowMs) {
+      return { race, nextSession: null, liveSession: null, allSessions: sorted };
     }
   }
 
