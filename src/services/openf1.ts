@@ -94,7 +94,10 @@ export interface JolpicaRace {
 
 export interface NextRaceInfo {
   race: RaceWeekend;
+  /** The next session that has not started yet */
   nextSession: Session | null;
+  /** The session that is under way right now, if any */
+  liveSession: Session | null;
   allSessions: Session[];
 }
 
@@ -545,52 +548,43 @@ export function getHeroState(
   };
 }
 
+/**
+ * The weekend the hero should show at `now`, with the session that is LIVE right now
+ * (started, not yet over) and the next upcoming one. Pure.
+ * - A weekend stays current until its last session is over.
+ * - A race with no known times is still upcoming until the end of its day.
+ * - Once every race is over, the last weekend with nothing live or upcoming.
+ */
 export function findNextRace(weekends: RaceWeekend[], now: Date = new Date()): NextRaceInfo | null {
+  const nowMs = now.getTime();
 
   for (const race of weekends) {
-    // Sort sessions chronologically
-    const sortedSessions = [...race.sessions].sort(
-      (a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime()
-    );
+    const sorted = [...race.sessions].sort(byStart);
 
-    // A race with no known times yet is still upcoming until the end of its day
-    if (sortedSessions.length === 0 && new Date(race.meeting.date_end) > now) {
-      return { race, nextSession: null, allSessions: [] };
+    if (sorted.length === 0) {
+      if (new Date(race.meeting.date_end).getTime() > nowMs) {
+        return { race, nextSession: null, liveSession: null, allSessions: [] };
+      }
+      continue;
     }
 
-    // Find the first upcoming session
-    const nextSessionIdx = sortedSessions.findIndex(s => new Date(s.date_start) > now);
+    const liveSession =
+      sorted.find(s => new Date(s.date_start).getTime() <= nowMs && nowMs < sessionEndTime(s)) || null;
+    const nextSession = sorted.find(s => new Date(s.date_start).getTime() > nowMs) || null;
 
-    if (nextSessionIdx !== -1) {
-      return {
-        race,
-        nextSession: sortedSessions[nextSessionIdx],
-        allSessions: sortedSessions
-      };
-    }
-
-    // If this race has upcoming sessions but we missed them all, check next race
-    const hasUpcoming = sortedSessions.some(s => new Date(s.date_start) > now);
-    if (hasUpcoming) {
-      const nextSess = sortedSessions.find(s => new Date(s.date_start) > now);
-      return {
-        race,
-        nextSession: nextSess || null,
-        allSessions: sortedSessions
-      };
+    if (liveSession || nextSession) {
+      return { race, nextSession, liveSession, allSessions: sorted };
     }
   }
 
   // All races passed, return the last one
   if (weekends.length > 0) {
     const last = weekends[weekends.length - 1];
-    const sorted = [...last.sessions].sort(
-      (a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime()
-    );
     return {
       race: last,
       nextSession: null,
-      allSessions: sorted
+      liveSession: null,
+      allSessions: [...last.sessions].sort(byStart)
     };
   }
 

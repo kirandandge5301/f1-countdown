@@ -5,11 +5,13 @@ interface SessionCardProps {
   sessionLabel: string;
   sessionTime: string;
   isActive: boolean;
+  /** The session is under way right now: badge reads LIVE instead of NEXT */
+  isLive?: boolean;
   hasSprint?: boolean;
   delay?: number;
 }
 
-export default function SessionCard({ sessionLabel, sessionTime, isActive, hasSprint, delay = 0 }: SessionCardProps) {
+export default function SessionCard({ sessionLabel, sessionTime, isActive, isLive = false, hasSprint, delay = 0 }: SessionCardProps) {
   const { formatTime, formatDate } = useTimezone();
   const { days, hours, minutes, seconds, isExpired } = useCountdown(sessionTime);
 
@@ -23,8 +25,8 @@ export default function SessionCard({ sessionLabel, sessionTime, isActive, hasSp
         style={{ animationDelay: `${delay}ms` }}
       >
         <div className="flex items-center gap-3">
-          <span className="bg-[#111] text-white text-[10px] font-semibold px-2 py-0.5 rounded">
-            NEXT
+          <span className={`${isLive ? 'bg-[#E10600]' : 'bg-[#111]'} text-white text-[10px] font-semibold px-2 py-0.5 rounded`}>
+            {isLive ? 'LIVE' : 'NEXT'}
           </span>
           <span className="font-semibold text-base leading-tight">
   {sessionLabel}

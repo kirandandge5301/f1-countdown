@@ -25,6 +25,7 @@ export default function NextRaceSection() {
 
   const race = nextRace?.race;
   const nextSession = nextRace?.nextSession;
+  const liveSession = nextRace?.liveSession;
   const allSessions = nextRace?.allSessions || [];
   const nextSessionTime = nextSession ? new Date(nextSession.date_start) : null;
 
@@ -122,7 +123,26 @@ export default function NextRaceSection() {
             </p>
 
             {/* Countdown - Smaller & Better Balanced */}
-            {isProvisional && !nextSessionTime ? (
+            {liveSession ? (
+              // A session is under way right now: say so instead of counting down to zero
+              <div className="mb-12 md:mb-16 flex flex-col items-center text-center">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-2 h-2 rounded-full bg-[#E10600] animate-pulse" />
+                  <span className="text-[11px] font-medium tracking-[0.2em] text-[#E10600] uppercase">
+                    LIVE NOW
+                  </span>
+                </div>
+                <p className="text-[clamp(36px,8vw,72px)] font-semibold tracking-[-0.03em] leading-none text-[var(--text-primary)]">
+                  {getSessionDisplayName(liveSession)}
+                </p>
+                {nextSession && (
+                  <p className="mt-6 text-sm text-[var(--text-secondary)]">
+                    Next: {getSessionDisplayName(nextSession)} in{' '}
+                    <CountdownDisplay targetTime={nextSessionTime} size="mini" />
+                  </p>
+                )}
+              </div>
+            ) : isProvisional && !nextSessionTime ? (
               // Jolpica has a date but no start time yet: no countdown, never an invented time
               <p className="mb-12 md:mb-16 text-center text-sm text-[var(--text-secondary)]">
                 {provisionalDate} · times confirmed closer to the date
@@ -138,15 +158,17 @@ export default function NextRaceSection() {
               </div>
             )}
 
-            {/* Share Button */}
-            <div className="flex justify-center mb-12 md:mb-16">
-              <button
-                onClick={shareOnX}
-                className="px-8 py-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[var(--text-primary)] text-sm font-medium flex items-center gap-2 transition-all active:scale-95"
-              >
-                🏁 Share Countdown on X
-              </button>
-            </div>
+            {/* Share Button (only when there is a countdown to share) */}
+            {nextSessionTime && (
+              <div className="flex justify-center mb-12 md:mb-16">
+                <button
+                  onClick={shareOnX}
+                  className="px-8 py-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[var(--text-primary)] text-sm font-medium flex items-center gap-2 transition-all active:scale-95"
+                >
+                  🏁 Share Countdown on X
+                </button>
+              </div>
+            )}
 
             {/* Circuit Info */}
             {circuitInfo && (
@@ -172,7 +194,8 @@ export default function NextRaceSection() {
                   key={session.session_key || i}
                   sessionLabel={getSessionDisplayName(session)}
                   sessionTime={session.date_start}
-                  isActive={nextSession?.session_key === session.session_key}
+                  isActive={(liveSession ?? nextSession)?.session_key === session.session_key}
+                  isLive={liveSession?.session_key === session.session_key}
                   hasSprint={race.isSprint}
                   delay={100 * i}
                 />
