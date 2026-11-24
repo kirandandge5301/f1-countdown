@@ -2,10 +2,12 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo, t
 import {
   detectUserTimezone,
   normalizeTimezone,
+  isValidTimezone,
   buildTimezoneLabel,
   buildTimezoneOptions,
   formatTimeInZone,
   formatDateInZone,
+  FALLBACK_TIMEZONE,
   type TimezoneOption
 } from '@/data/timezones';
 
@@ -19,8 +21,8 @@ interface TimezoneContextType {
 }
 
 const TimezoneContext = createContext<TimezoneContextType>({
-  timezone: 'Asia/Kolkata',
-  timezoneLabel: 'India (GMT+5:30)',
+  timezone: FALLBACK_TIMEZONE,
+  timezoneLabel: buildTimezoneLabel(FALLBACK_TIMEZONE),
   timezoneOptions: [],
   setTimezone: () => {},
   formatTime: () => '--:--',
@@ -36,7 +38,7 @@ export function TimezoneProvider({ children }: { children: ReactNode }) {
     // Saved choice first, else the visitor's own zone. Storage can be blocked (private mode).
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return normalizeTimezone(saved);
+      if (saved && isValidTimezone(normalizeTimezone(saved))) return normalizeTimezone(saved);
     } catch {
       // ignore
     }

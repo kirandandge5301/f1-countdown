@@ -87,12 +87,27 @@ export function formatShortDateInZone(utcString: string, timezone: string): stri
   }
 }
 
+/** Used only when the browser can't tell us the visitor's zone. Neutral: no guess about where they are. */
+export const FALLBACK_TIMEZONE = 'UTC';
+
+export function isValidTimezone(timezone: unknown): timezone is string {
+  if (typeof timezone !== 'string' || !timezone) return false;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: timezone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function detectUserTimezone(): string {
   try {
-    return normalizeTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    const detected = normalizeTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    if (isValidTimezone(detected)) return detected;
   } catch {
-    return 'Asia/Kolkata';
+    // fall through to the neutral fallback
   }
+  return FALLBACK_TIMEZONE;
 }
 
 export function formatTimeInZone(utcString: string, timezone: string): string {
