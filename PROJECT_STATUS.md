@@ -1,9 +1,14 @@
 # Project Status
 
-_Last updated: 2026-11-25 · branch `fix/team-colors-data` (tip of 7 stacked branches, not yet merged)_
+_Last updated: 2026-11-25 · all work merged to `main`_
 
 ## Done
 
+- **Jolpica wins when the two services disagree on a session time** - merged
+  - If OpenF1 puts a session more than 1 hour away from Jolpica's time for the same
+    session, Jolpica's start is used (the session keeps its OpenF1 length). Only the
+    2026 Miami race differed (OpenF1 17:00, Jolpica 20:00); it now shows 20:00.
+  - File: `src/services/openf1.ts` (`preferJolpicaTimes`).
 - **Calendar and live-state batch (7 stacked branches, not merged)**
   - **Jolpica is the calendar source** (`3decf76`): race list, names, rounds, dates and
     cancellations come from Jolpica; OpenF1 adds session times, matched by start time
@@ -110,9 +115,6 @@ _Last updated: 2026-11-25 · branch `fix/team-colors-data` (tip of 7 stacked bra
   by date. This keeps the off-season countdown working, but it is an exception to
   "OpenF1 is for session times only". Removing the fallback means the page says
   "2027 calendar coming soon" until Jolpica has the season.
-- **OpenF1 and Jolpica times can disagree.** Miami: OpenF1's race start is 3 h earlier
-  than Jolpica's. The page shows OpenF1's (as the rules say); consider preferring
-  Jolpica when they differ by more than an hour.
 - **Missing circuit facts / insights:** no insights for Barcelona, Las Vegas, Qatar and
   "Bahrain Grand Prix in Malaysia"; the circuit fact box exists for only 6 races
   (`src/data/circuitInfo.ts`, `src/data/gp-insights.ts`, keyed by Jolpica race name).
