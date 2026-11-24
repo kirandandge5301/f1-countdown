@@ -1,9 +1,14 @@
 # Project Status
 
-_Last updated: 2026-11-25 · branch `fix/remove-driver-photos` (`496d1df`, not yet merged)_
+_Last updated: 2026-11-25 · all work merged to `main`_
 
 ## Done
 
+- **How to watch badges fixed** - merged
+  - The two default cards showed raw escape text (\u00b7) instead of a dot, because
+    JSX string attributes do not process JS escapes. Now a real "·":
+    "WORLDWIDE · OFFICIAL", "UNITED KINGDOM · IRELAND".
+  - File: `src/sections/HowToWatchSection.tsx`.
 - **Driver photos removed** - `fix/remove-driver-photos`, `496d1df`
   - Standings no longer hotlink official F1 headshots (design rule: no driver photos).
     The Drivers tab shows the car number (initials if none) in a team-colour ring.
@@ -103,8 +108,5 @@ _Last updated: 2026-11-25 · branch `fix/remove-driver-photos` (`496d1df`, not y
 
 ## Known open bugs
 
-- **HowToWatch shows literal `\u00b7`:** `src/sections/HowToWatchSection.tsx:43,50`
-  use `\u00b7` in plain JSX string attributes, where JS escapes aren't processed.
-  The badges read "WORLDWIDE \u00b7 OFFICIAL" instead of "WORLDWIDE · OFFICIAL".
 - **Miami start time** differs between APIs (OpenF1 17:00Z, Jolpica 20:00Z).
   Matching still works; one source is wrong.
