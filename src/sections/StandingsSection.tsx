@@ -135,15 +135,13 @@ export default function StandingsSection() {
                           {driver.position}
                         </span>
 
-                        {driver.headshotUrl ? (
-                          <img
-                            src={driver.headshotUrl}
-                            alt={driver.firstName}
-                            className="w-14 h-14 rounded-full object-cover border-2 border-[var(--border-subtle)]"
-                          />
-                        ) : (
-                          <div className="w-14 h-14 rounded-full bg-zinc-800" />
-                        )}
+                        {/* Car number in a team-colour ring (no driver photos) */}
+                        <div
+                          className="w-14 h-14 shrink-0 rounded-full bg-zinc-800 border-2 flex items-center justify-center font-mono text-lg font-bold text-white tabular-nums"
+                          style={{ borderColor: driver.teamColor }}
+                        >
+                          {driver.driverNumber || `${driver.firstName?.[0] ?? ''}${driver.lastName?.[0] ?? ''}`}
+                        </div>
 
                         <div>
                           <div className="font-semibold text-[17px] text-[var(--text-primary)]">

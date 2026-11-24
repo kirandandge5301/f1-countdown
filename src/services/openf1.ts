@@ -49,17 +49,6 @@ export interface Session {
   is_cancelled: boolean;
 }
 
-export interface DriverInfo {
-  driver_number: number;
-  first_name: string;
-  last_name: string;
-  team_name: string;
-  team_colour: string;
-  name_acronym: string;
-  headshot_url: string;
-  country_code: string;
-}
-
 export interface RaceWeekend {
   round: number;
   meeting: Meeting;
@@ -197,32 +186,6 @@ export async function fetchSessionsForMeeting(meetingKey: number): Promise<Sessi
     data.sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime());
     setCache(cacheKey, data);
     return data;
-  }
-  return [];
-}
-
-// ======= DRIVER INFO =======
-
-export async function fetchDrivers(): Promise<DriverInfo[]> {
-  const cacheKey = 'drivers';
-  const cached = getCached<DriverInfo[]>(cacheKey);
-  if (cached) return cached;
-
-  const data = await fetchJSON<DriverInfo[]>(`/drivers`);
-  if (data) {
-    // Deduplicate by driver_number, keep latest
-    const seen = new Set<number>();
-    const unique: DriverInfo[] = [];
-    // Process in reverse to get latest entries first
-    for (let i = data.length - 1; i >= 0; i--) {
-      const d = data[i];
-      if (!seen.has(d.driver_number)) {
-        seen.add(d.driver_number);
-        unique.unshift(d);
-      }
-    }
-    setCache(cacheKey, unique);
-    return unique;
   }
   return [];
 }
@@ -722,7 +685,7 @@ async function fetchJolpicaStandings<K extends string, T>(
   return { ...previous, isFinal: true };
 }
 
-// ======= STANDINGS WITH DRIVER INFO =======
+// ======= STANDINGS ROWS (all from Jolpica; no driver photos) =======
 
 export interface EnrichedDriverStanding {
   position: number;
@@ -733,7 +696,6 @@ export interface EnrichedDriverStanding {
   points: number;
   wins: number;
   driverNumber: number;
-  headshotUrl: string;
 }
 
 export interface EnrichedConstructorStanding {
@@ -745,16 +707,14 @@ export interface EnrichedConstructorStanding {
 }
 
 export async function fetchEnrichedDriverStandings(): Promise<StandingsResult<EnrichedDriverStanding>> {
-  // Headshots are a best-effort add-on from OpenF1; failure must never block standings.
-  const [standings, driverInfos] = await Promise.all([
-    fetchJolpicaStandings<'DriverStandings', JolpicaDriverStanding>('driverstandings.json', 'DriverStandings'),
-    fetchDrivers().catch(() => [] as DriverInfo[]),
-  ]);
+  const standings = await fetchJolpicaStandings<'DriverStandings', JolpicaDriverStanding>(
+    'driverstandings.json',
+    'DriverStandings'
+  );
 
   const rows = standings.entries.map((entry, idx) => {
     const driverNumber = Number(entry.Driver.permanentNumber) || 0;
     const team = entry.Constructors[entry.Constructors.length - 1];
-    const info = driverNumber ? driverInfos.find(d => d.driver_number === driverNumber) : undefined;
 
     return {
       position: Number(entry.position) || idx + 1,
@@ -765,7 +725,6 @@ export async function fetchEnrichedDriverStandings(): Promise<StandingsResult<En
       points: Number(entry.points) || 0,
       wins: Number(entry.wins) || 0,
       driverNumber,
-      headshotUrl: info?.headshot_url || '',
     };
   });
 
