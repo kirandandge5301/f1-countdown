@@ -353,6 +353,43 @@ function sessionsFromJolpica(race: JolpicaRace, year: number): Session[] {
     .sort(byStart);
 }
 
+// If OpenF1 and Jolpica put the same session more than this far apart, Jolpica wins
+const SESSION_DISAGREE_MS = HOUR_MS;
+
+/** Jolpica's start time for a session, by its name (null when Jolpica has none). */
+function jolpicaStartFor(race: JolpicaRace, sessionName: string): string | null {
+  if (sessionName === 'Race') return race.time ? `${race.date}T${race.time}` : null;
+  for (const f of JOLPICA_SESSIONS) {
+    const s = race[f.key] as JolpicaSession | undefined;
+    if (f.name === sessionName && s && s.date && s.time) return `${s.date}T${s.time}`;
+  }
+  return null;
+}
+
+/**
+ * Jolpica is the source of the calendar, so where an OpenF1 session starts more than an
+ * hour away from Jolpica's time for the same session, Jolpica's start is used. The
+ * session keeps its OpenF1 length (the end moves by the same amount). Pure.
+ */
+export function preferJolpicaTimes(race: JolpicaRace, sessions: Session[]): Session[] {
+  return sessions.map(s => {
+    const j = jolpicaStartFor(race, s.session_name);
+    if (!j) return s;
+    const jolpicaMs = new Date(j).getTime();
+    const openF1Ms = new Date(s.date_start).getTime();
+    if (!Number.isFinite(jolpicaMs) || !Number.isFinite(openF1Ms)) return s;
+    if (Math.abs(jolpicaMs - openF1Ms) <= SESSION_DISAGREE_MS) return s;
+
+    console.warn(`${race.raceName} ${s.session_name}: OpenF1 and Jolpica disagree; using Jolpica's ${j}`);
+    const endMs = s.date_end ? new Date(s.date_end).getTime() : NaN;
+    return {
+      ...s,
+      date_start: new Date(jolpicaMs).toISOString(),
+      date_end: Number.isFinite(endMs) ? new Date(endMs + (jolpicaMs - openF1Ms)).toISOString() : '',
+    };
+  });
+}
+
 /**
  * The season's race list from Jolpica (names, rounds, dates; cancelled races are not
  * listed). OpenF1 supplies the session times where it has the weekend; where it has
@@ -375,7 +412,9 @@ export function buildWeekendsFromJolpica(
       if (match) used.add(match.meeting.meeting_key);
 
       const fromOpenF1 = !!match && match.sessions.length > 0;
-      const sessions = fromOpenF1 ? match!.sessions : sessionsFromJolpica(race, year);
+      const sessions = fromOpenF1
+        ? preferJolpicaTimes(race, match!.sessions).sort(byStart)
+        : sessionsFromJolpica(race, year);
       const raceDay = `${race.date}T${race.time || '00:00:00Z'}`;
       const place = race.Circuit?.Location?.locality || '';
       const m = match?.meeting;
