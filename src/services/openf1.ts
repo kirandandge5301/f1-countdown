@@ -4,6 +4,8 @@
  * Base URL: https://api.openf1.org/v1/
  */
 
+import { teamColor } from '@/data/teamColors';
+
 const API_BASE = 'https://api.openf1.org/v1';
 const JOLPICA_ROOT = 'https://api.jolpi.ca/ergast/f1';
 const CACHE_DURATION = 60000; // 60 seconds
@@ -689,26 +691,6 @@ export interface StandingsResult<T> {
   round: number;
   /** true when these are the previous season's final standings (new season, before round 1) */
   isFinal: boolean;
-}
-
-// Keyed by Jolpica constructorId (stable across sponsor/name changes)
-const TEAM_COLORS: Record<string, string> = {
-  red_bull: '#1E41FF',
-  mclaren: '#FF8000',
-  ferrari: '#DC0000',
-  mercedes: '#27F4D2',
-  aston_martin: '#006F62',
-  williams: '#64C4FF',
-  rb: '#6692FF',
-  haas: '#B6BABD',
-  alpine: '#FF87BC',
-  sauber: '#52E252',
-  audi: '#BB0A30',
-  cadillac: '#C9B37E',
-};
-
-function teamColor(constructorId: string | undefined): string {
-  return (constructorId && TEAM_COLORS[constructorId]) || '#999999';
 }
 
 /** One season's standings table. Throws on HTTP/format errors; [] entries if none yet. */
