@@ -13,7 +13,7 @@ Kiran, solo founder, not a professional developer. Explain important decisions i
 ## Data rules (non-negotiable)
 - Never show invented, hard-coded or stale data as live.
 - Jolpica (https://api.jolpi.ca/ergast/f1) is the source for the calendar, round numbers, results and standings.
-- OpenF1 (https://api.openf1.org/v1) is for session times and driver headshots only.
+- OpenF1 (https://api.openf1.org/v1) is for session times only.
 - Skip races and sessions with `is_cancelled: true`.
 - Never match races between the two APIs by name (they name races differently).
 - If data can't be loaded, show an honest error or clearly labelled cached data ("as of …").
