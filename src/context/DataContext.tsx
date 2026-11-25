@@ -9,6 +9,8 @@ import {
   fetchEnrichedConstructorStandings,
   type HeroState,
   type SeasonStatus,
+  type RaceWeekend,
+  type NextRaceInfo,
   type EnrichedDriverStanding,
   type EnrichedConstructorStanding
 } from '@/services/openf1';
@@ -21,7 +23,30 @@ const REFRESH_ON_RETURN_MS = 5 * 60 * 1000;  // refresh when the tab comes back 
 const ROLLOVER_RETRY_MS = 5 * 60 * 1000;     // at most one season-rollover reload per this long
 const MAX_TIMER_MS = 6 * 60 * 60 * 1000;     // setTimeout can't take huge delays: re-check at least this often
 
-const DataContext = createContext<any>({
+interface DataContextValue {
+  raceWeekends: RaceWeekend[];
+  nextRace: NextRaceInfo | null;
+  heroState: HeroState | null;
+  activeSeason: number;
+  seasonStatus: SeasonStatus | null;
+  calendarError: string | null;
+  calendarStaleSince: Date | null;
+  calendarLoading: boolean;
+  totalRounds: number;
+  driverStandings: EnrichedDriverStanding[];
+  constructorStandings: EnrichedConstructorStanding[];
+  standingsError: string | null;
+  standingsUpdatedAt: Date | null;
+  standingsRound: number | null;
+  standingsFinalSeason: number | null;
+  standingsLoading: boolean;
+  loading: boolean;
+  refresh: () => Promise<void>;
+  refreshCalendar: () => Promise<void>;
+  refreshStandings: () => Promise<void>;
+}
+
+const DataContext = createContext<DataContextValue>({
   raceWeekends: [],
   nextRace: null,
   heroState: null,
@@ -39,13 +64,13 @@ const DataContext = createContext<any>({
   standingsFinalSeason: null,
   standingsLoading: false,
   loading: true,
-  refresh: () => {},
-  refreshCalendar: () => {},
-  refreshStandings: () => {},
+  refresh: async () => {},
+  refreshCalendar: async () => {},
+  refreshStandings: async () => {},
 });
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [raceWeekends, setRaceWeekends] = useState<any[]>([]);
+  const [raceWeekends, setRaceWeekends] = useState<RaceWeekend[]>([]);
   const [activeSeason, setActiveSeason] = useState<number>(() => new Date().getUTCFullYear());
   const [seasonStatus, setSeasonStatus] = useState<SeasonStatus | null>(null);
   const [calendarError, setCalendarError] = useState<string | null>(null);
