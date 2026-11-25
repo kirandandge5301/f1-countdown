@@ -15,6 +15,7 @@ import {
   type EnrichedConstructorStanding
 } from '@/services/openf1';
 import { saveCalendar, loadSavedCalendar } from '@/services/calendarCache';
+import { fetchContent, type Content } from '@/features/playlist/content';
 
 const CALENDAR_ERROR = "Couldn't load the race calendar right now.";
 
@@ -40,6 +41,8 @@ interface DataContextValue {
   standingsRound: number | null;
   standingsFinalSeason: number | null;
   standingsLoading: boolean;
+  /** Kiran's editorial content (null = not loaded; it is never live data) */
+  content: Content | null;
   loading: boolean;
   refresh: () => Promise<void>;
   refreshCalendar: () => Promise<void>;
@@ -63,6 +66,7 @@ const DataContext = createContext<DataContextValue>({
   standingsRound: null,
   standingsFinalSeason: null,
   standingsLoading: false,
+  content: null,
   loading: true,
   refresh: async () => {},
   refreshCalendar: async () => {},
@@ -84,6 +88,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // The round Jolpica reports for the standings (can run ahead of the points, see below)
   const [standingsReportedRound, setStandingsReportedRound] = useState<number | null>(null);
   const [standingsFinalSeason, setStandingsFinalSeason] = useState<number | null>(null);
+  const [content, setContent] = useState<Content | null>(null);
   const [loading, setLoading] = useState(true);
 
   // "What time is it for the page": moves forward only when something on the page can
@@ -215,7 +220,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Editorial content: a failed refresh keeps what is already there
+  const loadContent = useCallback(async () => {
+    const loaded = await fetchContent();
+    if (loaded) setContent(loaded);
+  }, []);
+
   const loadData = useCallback(async () => {
+    void loadContent(); // separate: it must never hold up the race data
     setLoading(true);
     lastRefreshAt.current = Date.now();
     try {
@@ -223,13 +235,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [loadCalendar, loadStandings]);
+  }, [loadCalendar, loadStandings, loadContent]);
 
   // Background refresh: no loading placeholders, nothing wiped if it fails
   const silentRefresh = useCallback(async () => {
     lastRefreshAt.current = Date.now();
-    await Promise.all([loadCalendar(), loadStandings(true)]);
-  }, [loadCalendar, loadStandings]);
+    await Promise.all([loadCalendar(), loadStandings(true), loadContent()]);
+  }, [loadCalendar, loadStandings, loadContent]);
 
   useEffect(() => {
     loadData();
@@ -317,6 +329,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       standingsRound,
       standingsFinalSeason,
       standingsLoading,
+      content,
       loading,
       refresh,
       refreshCalendar,

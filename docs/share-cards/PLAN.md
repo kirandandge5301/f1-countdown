@@ -6,7 +6,7 @@
 |---|---|---|
 | 0 Research and plan | done | see git log "share-cards stage 0" |
 | 1 Content, playlist state, qualifying service, tests | done | |
-| 2 Cards and Card Studio | not started | |
+| 2 Cards and Card Studio | done (Studio playlist preview comes with stage 4) | |
 | 3 Share dialog and hero | not started | |
 | 4 Playlist section | not started | |
 | 5 Docs and rules | not started | |
