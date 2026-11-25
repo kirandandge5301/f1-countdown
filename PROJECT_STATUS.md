@@ -1,9 +1,22 @@
 # Project Status
 
-_Last updated: 2026-11-26 · all work merged to `main`_
+_Last updated: 2026-11-25 · share cards and playlist on `feature/share-cards`, not merged; everything else on `main`_
 
 ## Done
 
+- **Share cards and race-week playlist (branch `feature/share-cards`, not merged)**
+  - Share cards drawn in the browser: countdown, fastest in qualifying, playlist out now; Story and
+    Post; three layouts (N8, N7, N3). The hero's "Share" button replaces "Share Countdown on X".
+  - The qualifying card says "fastest in qualifying", never "pole": Jolpica's qualifying P1 is not
+    the pole-sitter when there is a grid penalty (Las Vegas 2026).
+  - Share dialog: phone share sheet; on desktop copy image, X, Facebook, WhatsApp, download.
+  - Playlist section after the hero, driven by `public/content/race-weeks.json` (empty for now).
+    Music players load only after a tap. Hidden if the content file can't be loaded.
+  - Card Studio at `/?studio` (unlisted, watermarked, no download or share).
+  - The hero tagline comes from the week's entry; otherwise it stays "The roar is coming.", which is
+    written in `src/sections/NextRaceSection.tsx`.
+  - Tests: `npm test` (vitest, dev only). Main bundle +13.8 KB gzipped (limit about 15).
+  - Brief, plan and research: `docs/share-cards/`. Daily steps: `docs/share-cards/DAILY-UPDATE.md`.
 - **V1 polish (merged)**
   - Light theme: the "NEXT" session card follows the theme tokens (a dark card on the light
     page; it was white on white), and the 1/2/3 rank numbers are darker in light mode.
@@ -154,9 +167,16 @@ once its contents are available: that file was not accessible when this was writ
   were picked by Claude, not taken from an official source.
 - **Testing note:** Jolpica answers 403 to Node's default client (a bot filter; browsers are
   fine), so scripts that call Jolpica from Node need saved data.
+- **Share cards:** qualifying can appear about 10 minutes late (Jolpica's cache), and the count of
+  "times fastest" comes from Jolpica's list. Signed-out listeners may hear only previews.
 
 ## Later
 
+- **Per-race preview image** for link previews (og:image from a server function).
+- **Animated countdown video.**
+- **Playlist archive page.**
+- **Fan "my pick for pole" cards.**
+- **A privacy page** that mentions the Spotify and Apple Music embeds.
 - **Circuit facts and insights:** none for Barcelona, Las Vegas, Qatar and "Bahrain Grand Prix
   in Malaysia", and the circuit-fact box exists for only 6 of 23 races
   (`src/data/circuitInfo.ts`, `src/data/gp-insights.ts`, keyed by Jolpica race name). Content work.
@@ -165,6 +185,9 @@ once its contents are available: that file was not accessible when this was writ
 
 ## Needs a decision
 
+- **Phone test before merging** (`docs/share-cards/BRIEF.md`, section 13), then merge outside a race
+  weekend: 30 Nov - 3 Dec, or after the 6 Dec race.
+- **Sample card images** in `docs/share-cards/samples/` (54 files, not committed): keep a few in git?
 - **OpenF1 as a fallback calendar.** Jolpica is the source of the race list. Only when Jolpica
   has no calendar for a season (2027 today, until it publishes) or is down, the page falls back
   to OpenF1's own list, with rounds numbered by date. This keeps the off-season countdown

@@ -9,7 +9,7 @@
 | 2 Cards and Card Studio | done | |
 | 3 Share dialog and hero | done | |
 | 4 Playlist section | done | |
-| 5 Docs and rules | not started | |
+| 5 Docs and rules | done; next: phone test (BRIEF section 13), then merge | |
 
 ## Decided (Kiran, 25 Nov 2026): option A for the pole card
 
