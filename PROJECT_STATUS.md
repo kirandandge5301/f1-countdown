@@ -1,10 +1,25 @@
 # Project Status
 
-_Last updated: 2026-11-26 · branch `fix/v1-closeout` (not yet merged)_
+_Last updated: 2026-11-26 · all work merged to `main`_
 
 ## Done
 
-- **V1 closeout (branch `fix/v1-closeout`, not merged)**
+- **V1 polish (merged)**
+  - Light theme: the "NEXT" session card follows the theme tokens (a dark card on the light
+    page; it was white on white), and the 1/2/3 rank numbers are darker in light mode.
+  - Phone standings: ranks stay in a column, the car-number circles line up, long names wrap
+    and there is a gap before the points.
+  - Header fits at every width from 320px up; the icon-only buttons (time zone, theme, menu)
+    have accessible names.
+  - Tab icon: a red dot, like the logo's (inline SVG in `index.html`).
+  - The countdown hook (`useCountdown.ts`) no longer restarts its timer on every redraw;
+    verified it still ticks one second at a time.
+  - Lint is clean (0 errors): the data context is typed (no `any`), and two style-only rules
+    are off for the unused shadcn kit and the context files (`eslint.config.js`).
+  - Files: `src/components/SessionCard.tsx`, `src/sections/StandingsSection.tsx`,
+    `src/components/Header.tsx`, `src/hooks/useCountdown.ts`, `src/context/DataContext.tsx`,
+    `src/index.css`, `index.html`, `eslint.config.js`.
+- **V1 closeout (merged)**
   - Page head: title "GPCountdown · F1 race countdown, schedule and standings", meta
     description, Open Graph (title, description, type, site name), twitter:card=summary and
     theme-color #0A0A0A. No og:image / og:url yet. File: `index.html`.
@@ -119,45 +134,51 @@ _Last updated: 2026-11-26 · branch `fix/v1-closeout` (not yet merged)_
   honest error card. Retry reloads standings only.
 - **India broadcaster** (`6534024`): secondary card is now FanCode.
 
-## Still open
+_Drafted from the open-items list. Reconcile with `claude/SITE-V1-FINISH-LINE-2026-11-25.md`
+once its contents are available: that file was not accessible when this was written._
 
-- **Decision for you: OpenF1 as a fallback calendar.** Jolpica is now the source of the
-  race list. Only when Jolpica has no calendar for a season (2027 today, until Jolpica
-  publishes it) or is down, the page falls back to OpenF1's own list, with rounds numbered
-  by date. This keeps the off-season countdown working, but it is an exception to
-  "OpenF1 is for session times only". Removing the fallback means the page says
-  "2027 calendar coming soon" until Jolpica has the season.
-- **Missing circuit facts / insights:** no insights for Barcelona, Las Vegas, Qatar and
-  "Bahrain Grand Prix in Malaysia"; the circuit fact box exists for only 6 races
-  (`src/data/circuitInfo.ts`, `src/data/gp-insights.ts`, keyed by Jolpica race name).
-- **"After Round N" just after a race:** capped to finished races, but between the end of
-  a race and Jolpica adding its results the label can say Round N with points after N-1.
-- **"Final" label timing:** from the last race until Jolpica switches season, standings
-  read "After Round N", not "Final <year> standings".
-- **Next season fails to load after the final race:** the hero shows "<year> season
-  complete · <next year> calendar coming soon" until a background refresh (every 15 min)
-  succeeds.
-- **Saved calendar covers the calendar only.** Standings keep their error card + Retry;
-  a failed background refresh keeps old standings with their "Last updated" time.
-- **Hero label while live** still reads "NEXT RACE WEEKEND" above the "LIVE NOW" block.
-- **Off-season countdown target:** the hero counts to the next session (e.g. Practice 1),
-  not the race itself. Confirm which is wanted.
-- **"Times shown in ..." line** under the Schedule heading uses today's offset, which
-  can differ from a race's offset in another month for daylight-saving zones (the
-  cards themselves are correct per race date).
-- **Team colours are approximations** (`src/data/teamColors.ts`); the Audi and Cadillac
-  values were picked by Claude, not taken from an official source.
-- **Lint reports 17 errors, all from before this session:** nine "react-refresh" errors in
-  shadcn UI components and the context files, `any` types in `StandingsSection.tsx` and
-  `DataContext.tsx`, a purity error in `ui/sidebar.tsx`, and two ref-during-render errors in
-  `useCountdown.ts`. The build is unaffected.
-- **Phone standings rows are tight:** a name like "George Russell" butts against its points,
-  and the car-number circles do not line up from row to row (the rank column shrinks).
-- **Header at 320px wide** (a 2016 iPhone SE) is still 3px too wide.
-- **Two older GitHub branches** (`experimental`, `feature/premium-social-sharing`) each have
-  10 commits not in `main` (last touched 9 Jun). Decide whether to keep them.
-- **Testing note:** Jolpica answers 403 to Node's default client (a bot filter; browsers
-  are fine), so scripts that call Jolpica from Node need saved data.
+## Accepted for v1 (won't fix)
+
+- **"Final" label timing:** from the last race until Jolpica switches season, standings read
+  "After Round N", not "Final <year> standings".
+- **"After Round N" just after a race:** it is capped to races that have finished, but between
+  the end of a race and Jolpica adding its results it can say Round N with points after N-1.
+- **Next season fails to load after the final race:** the hero shows "<year> season complete ·
+  <next year> calendar coming soon" until a background refresh (every 15 min) succeeds.
+- **Saved calendar covers the calendar only.** Standings keep their error card + Retry; a failed
+  background refresh keeps old standings with their "Last updated" time.
+- **"Times shown in ..." line** under the Schedule heading uses today's offset, which can differ
+  from a race's offset in another month for daylight-saving zones (the race cards themselves
+  are correct per race date).
+- **Team colours are approximations** (`src/data/teamColors.ts`); the Audi and Cadillac values
+  were picked by Claude, not taken from an official source.
+- **Testing note:** Jolpica answers 403 to Node's default client (a bot filter; browsers are
+  fine), so scripts that call Jolpica from Node need saved data.
+
+## Later
+
+- **Circuit facts and insights:** none for Barcelona, Las Vegas, Qatar and "Bahrain Grand Prix
+  in Malaysia", and the circuit-fact box exists for only 6 of 23 races
+  (`src/data/circuitInfo.ts`, `src/data/gp-insights.ts`, keyed by Jolpica race name). Content work.
+- **Share previews:** add `og:image` and `og:url`, and a PNG / home-screen icon, once the final
+  domain exists.
+
+## Needs a decision
+
+- **OpenF1 as a fallback calendar.** Jolpica is the source of the race list. Only when Jolpica
+  has no calendar for a season (2027 today, until it publishes) or is down, the page falls back
+  to OpenF1's own list, with rounds numbered by date. This keeps the off-season countdown
+  working, but it is an exception to "OpenF1 is for session times only". Removing it means the
+  page says "2027 calendar coming soon" from 7 Dec until Jolpica has the season.
+  Recommendation: keep it until Jolpica publishes 2027, then remove it.
+- **Off-season countdown target:** the hero counts to the next session (e.g. Practice 1), not the
+  race itself. Confirm which is wanted.
+- **Two older GitHub branches** (`experimental`, `feature/premium-social-sharing`) each have 10
+  commits that are not in `main` (last touched 9 Jun). Keep or delete?
+- **The unused shadcn/ui kit** (53 files in `src/components/ui`, none used by the app). Delete
+  it, or start using it? Its style lint rules are switched off meanwhile.
+- **Domain:** `gpcountdown.com` does not resolve yet; the live site is
+  `f1-countdown-pearl.vercel.app`.
 
 ## Known open bugs
 
