@@ -101,7 +101,9 @@ export default function Header() {
             <div ref={tzRef} className="relative">
               <button
                 onClick={() => setTzOpen(!tzOpen)}
-                className="flex items-center gap-2 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl px-3 sm:px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors sm:min-w-[140px]"
+                aria-label={`Time zone: ${timezoneLabel}`}
+                aria-expanded={tzOpen}
+                className="flex items-center gap-2 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl px-2.5 sm:px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors sm:min-w-[140px]"
               >
                 <Globe size={15} />
                 <span className="hidden sm:inline font-medium">{timezoneLabel}</span>
@@ -132,6 +134,7 @@ export default function Header() {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
               className="w-9 h-9 flex items-center justify-center bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
@@ -140,6 +143,7 @@ export default function Header() {
             {/* Mobile Menu */}
             <button
               onClick={() => setMobileOpen(true)}
+              aria-label="Open menu"
               className="md:hidden w-9 h-9 flex items-center justify-center text-[var(--text-secondary)]"
             >
               <Menu size={22} />
@@ -151,7 +155,7 @@ export default function Header() {
       {/* Mobile Menu Overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-[300] bg-[var(--bg-primary)] flex flex-col items-center justify-center">
-          <button onClick={() => setMobileOpen(false)} className="absolute top-6 right-6 text-[var(--text-secondary)]">
+          <button onClick={() => setMobileOpen(false)} aria-label="Close menu" className="absolute top-6 right-6 text-[var(--text-secondary)]">
             <X size={28} />
           </button>
           <nav className="flex flex-col items-center gap-10 text-2xl">

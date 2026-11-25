@@ -19,6 +19,10 @@
   --hero-grid-major: rgba(255,255,255,0.03);
   --active-card-bg: #FFFFFF;
   --active-card-text: #111111;
+  --active-card-muted: #666666;
+  --rank-1: #FFD700;
+  --rank-2: #C0C0C0;
+  --rank-3: #CD7F32;
   --badge-sprint: #E10600;
   --badge-sprint-text: #FFFFFF;
   --broadcast-red-card: #E10600;
@@ -44,6 +48,10 @@
   --hero-grid-major: rgba(0,0,0,0.03);
   --active-card-bg: #111111;
   --active-card-text: #FFFFFF;
+  --active-card-muted: #A0A0A0;
+  --rank-1: #B8860B;
+  --rank-2: #7A7F85;
+  --rank-3: #A35A1F;
   --badge-sprint: #E10600;
   --badge-sprint-text: #FFFFFF;
   --broadcast-red-card: #E10600;

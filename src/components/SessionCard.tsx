@@ -21,11 +21,11 @@ export default function SessionCard({ sessionLabel, sessionTime, isActive, isLiv
   if (isActive) {
     return (
       <div
-  className="bg-white text-[#111111] rounded-2xl px-4 md:px-6 py-4 md:py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 animate-fade-in-up"
+  className="bg-[var(--active-card-bg)] text-[var(--active-card-text)] rounded-2xl px-4 md:px-6 py-4 md:py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 animate-fade-in-up"
         style={{ animationDelay: `${delay}ms` }}
       >
         <div className="flex items-center gap-3">
-          <span className={`${isLive ? 'bg-[#E10600]' : 'bg-[#111]'} text-white text-[10px] font-semibold px-2 py-0.5 rounded`}>
+          <span className={`${isLive ? 'bg-[#E10600] text-white' : 'bg-[var(--active-card-text)] text-[var(--active-card-bg)]'} text-[10px] font-semibold px-2 py-0.5 rounded`}>
             {isLive ? 'LIVE' : 'NEXT'}
           </span>
           <span className="font-semibold text-base leading-tight">
@@ -33,7 +33,7 @@ export default function SessionCard({ sessionLabel, sessionTime, isActive, isLiv
 </span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-[#666]">{dateStr} &middot; {timeStr}</span>
+          <span className="text-sm text-[var(--active-card-muted)]">{dateStr} &middot; {timeStr}</span>
           {!isExpired && (
             <span className="font-mono text-sm tabular-nums">
               {String(days).padStart(2, '0')}d : {String(hours).padStart(2, '0')}h : {String(minutes).padStart(2, '0')}m : {String(seconds).padStart(2, '0')}s

@@ -5,9 +5,9 @@ import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 type Tab = 'drivers' | 'constructors';
 
 const POSITION_COLORS: Record<number, string> = {
-  1: '#FFD700',
-  2: '#C0C0C0',
-  3: '#CD7F32'
+  1: 'var(--rank-1)',
+  2: 'var(--rank-2)',
+  3: 'var(--rank-3)'
 };
 
 export default function StandingsSection() {
@@ -118,7 +118,7 @@ export default function StandingsSection() {
             {/* DRIVERS TAB */}
             {activeTab === 'drivers' && (
   <div className="space-y-4">
-    {driverStandings.map((driver: any, i: number) => (
+    {driverStandings.map((driver, i) => (
                   <div
                     key={`${driver.driverNumber}-${driver.position}`}
                     className={`bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl p-6 transition-all hover:border-[#E10600]/30 ${
@@ -127,9 +127,9 @@ export default function StandingsSection() {
                     style={{ animationDelay: `${i * 40}ms` }}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <span
-                          className="font-mono text-4xl font-bold tabular-nums w-12"
+                          className="font-mono text-4xl font-bold tabular-nums w-12 shrink-0"
                           style={{ color: POSITION_COLORS[driver.position] || 'var(--text-primary)' }}
                         >
                           {driver.position}
@@ -143,7 +143,7 @@ export default function StandingsSection() {
                           {driver.driverNumber || `${driver.firstName?.[0] ?? ''}${driver.lastName?.[0] ?? ''}`}
                         </div>
 
-                        <div>
+                        <div className="min-w-0">
                           <div className="font-semibold text-[17px] text-[var(--text-primary)]">
                             {driver.firstName} {driver.lastName}
                           </div>
@@ -151,7 +151,7 @@ export default function StandingsSection() {
                         </div>
                       </div>
 
-                      <div className="text-right">
+                      <div className="text-right shrink-0 pl-3">
                         <div className="font-mono text-3xl font-bold text-[var(--text-primary)] tabular-nums">
                           {driver.points}
                         </div>
@@ -166,7 +166,7 @@ export default function StandingsSection() {
             {/* CONSTRUCTORS TAB */}
             {activeTab === 'constructors' && (
   <div className="space-y-4">
-    {constructorStandings.map((constructor: any, i: number) => (
+    {constructorStandings.map((constructor, i) => (
                   <div
                     key={`${constructor.name}-${constructor.position}`}
                     className={`bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-3xl p-6 transition-all hover:border-[#E10600]/30 ${
@@ -175,9 +175,9 @@ export default function StandingsSection() {
                     style={{ animationDelay: `${i * 40}ms` }}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <span
-                          className="font-mono text-4xl font-bold tabular-nums w-12"
+                          className="font-mono text-4xl font-bold tabular-nums w-12 shrink-0"
                           style={{ color: POSITION_COLORS[constructor.position] || 'var(--text-primary)' }}
                         >
                           {constructor.position}
@@ -190,7 +190,7 @@ export default function StandingsSection() {
                         </div>
                       </div>
 
-                      <div className="text-right">
+                      <div className="text-right shrink-0 pl-3">
                         <div className="font-mono text-3xl font-bold text-[var(--text-primary)] tabular-nums">
                           {constructor.points}
                         </div>
