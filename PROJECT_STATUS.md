@@ -1,15 +1,27 @@
 # Project Status
 
-_Last updated: 2026-11-25 · all work merged to `main`_
+_Last updated: 2026-11-26 · branch `fix/v1-closeout` (not yet merged)_
 
 ## Done
 
+- **V1 closeout (branch `fix/v1-closeout`, not merged)**
+  - Page head: title "GPCountdown · F1 race countdown, schedule and standings", meta
+    description, Open Graph (title, description, type, site name), twitter:card=summary and
+    theme-color #0A0A0A. No og:image / og:url yet. File: `index.html`.
+  - The hero label reads "RACE WEEKEND" while a session is live (else "NEXT RACE WEEKEND").
+  - Races with no circuit fact or insights (Barcelona, Las Vegas, Qatar, Bahrain GP in
+    Malaysia) already look clean: no empty box, no extra gap. Nothing changed.
+  - Phone header: the time zone button no longer has a fixed 140px minimum on phones, so the
+    header fits at 360, 375, 390 and 430px wide (it was 18-33px too wide, cutting off the
+    menu icon). File: `src/components/Header.tsx`.
+  - Removed the 4 lint errors added during this session (`any` types in `DataContext.tsx`
+    and `calendarCache.ts`).
 - **Jolpica wins when the two services disagree on a session time** - merged
   - If OpenF1 puts a session more than 1 hour away from Jolpica's time for the same
     session, Jolpica's start is used (the session keeps its OpenF1 length). Only the
     2026 Miami race differed (OpenF1 17:00, Jolpica 20:00); it now shows 20:00.
   - File: `src/services/openf1.ts` (`preferJolpicaTimes`).
-- **Calendar and live-state batch (7 stacked branches, not merged)**
+- **Calendar and live-state batch (7 branches, merged)**
   - **Jolpica is the calendar source** (`3decf76`): race list, names, rounds, dates and
     cancellations come from Jolpica; OpenF1 adds session times, matched by start time
     (never by name). Where OpenF1 has no sessions for a weekend, Jolpica's own schedule
@@ -135,6 +147,15 @@ _Last updated: 2026-11-25 · all work merged to `main`_
   cards themselves are correct per race date).
 - **Team colours are approximations** (`src/data/teamColors.ts`); the Audi and Cadillac
   values were picked by Claude, not taken from an official source.
+- **Lint reports 17 errors, all from before this session:** nine "react-refresh" errors in
+  shadcn UI components and the context files, `any` types in `StandingsSection.tsx` and
+  `DataContext.tsx`, a purity error in `ui/sidebar.tsx`, and two ref-during-render errors in
+  `useCountdown.ts`. The build is unaffected.
+- **Phone standings rows are tight:** a name like "George Russell" butts against its points,
+  and the car-number circles do not line up from row to row (the rank column shrinks).
+- **Header at 320px wide** (a 2016 iPhone SE) is still 3px too wide.
+- **Two older GitHub branches** (`experimental`, `feature/premium-social-sharing`) each have
+  10 commits not in `main` (last touched 9 Jun). Decide whether to keep them.
 - **Testing note:** Jolpica answers 403 to Node's default client (a bot filter; browsers
   are fine), so scripts that call Jolpica from Node need saved data.
 
