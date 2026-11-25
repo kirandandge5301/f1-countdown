@@ -34,13 +34,18 @@ export function saveCalendar(
   }
 }
 
-function looksLikeWeekend(w: any): boolean {
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null;
+}
+
+function looksLikeWeekend(w: unknown): boolean {
+  if (!isRecord(w) || typeof w.round !== 'number') return false;
+  const meeting = w.meeting;
+  if (!isRecord(meeting) || typeof meeting.meeting_name !== 'string' || typeof meeting.date_end !== 'string') return false;
+  const sessions = w.sessions;
   return (
-    w && typeof w === 'object' &&
-    typeof w.round === 'number' &&
-    w.meeting && typeof w.meeting.meeting_name === 'string' && typeof w.meeting.date_end === 'string' &&
-    Array.isArray(w.sessions) &&
-    w.sessions.every((s: any) => s && typeof s.session_name === 'string' && typeof s.date_start === 'string')
+    Array.isArray(sessions) &&
+    sessions.every(s => isRecord(s) && typeof s.session_name === 'string' && typeof s.date_start === 'string')
   );
 }
 

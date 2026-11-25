@@ -8,7 +8,9 @@ import {
   fetchEnrichedDriverStandings,
   fetchEnrichedConstructorStandings,
   type HeroState,
-  type SeasonStatus
+  type SeasonStatus,
+  type EnrichedDriverStanding,
+  type EnrichedConstructorStanding
 } from '@/services/openf1';
 import { saveCalendar, loadSavedCalendar } from '@/services/calendarCache';
 
@@ -50,8 +52,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   // Set when the calendar on screen could not be refreshed: when it was last loaded live
   const [calendarStaleSince, setCalendarStaleSince] = useState<Date | null>(null);
   const [totalRounds, setTotalRounds] = useState<number>(0);
-  const [driverStandings, setDriverStandings] = useState<any[]>([]);
-  const [constructorStandings, setConstructorStandings] = useState<any[]>([]);
+  const [driverStandings, setDriverStandings] = useState<EnrichedDriverStanding[]>([]);
+  const [constructorStandings, setConstructorStandings] = useState<EnrichedConstructorStanding[]>([]);
   const [standingsError, setStandingsError] = useState<string | null>(null);
   const [standingsUpdatedAt, setStandingsUpdatedAt] = useState<Date | null>(null);
   // The round Jolpica reports for the standings (can run ahead of the points, see below)
