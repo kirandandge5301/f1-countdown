@@ -96,12 +96,12 @@ export default function Header() {
           </nav>
 
           {/* Right Side */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Timezone Selector */}
             <div ref={tzRef} className="relative">
               <button
                 onClick={() => setTzOpen(!tzOpen)}
-                className="flex items-center gap-2 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors min-w-[140px]"
+                className="flex items-center gap-2 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl px-3 sm:px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors sm:min-w-[140px]"
               >
                 <Globe size={15} />
                 <span className="hidden sm:inline font-medium">{timezoneLabel}</span>
