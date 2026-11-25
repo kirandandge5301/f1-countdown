@@ -6,6 +6,7 @@ import { useData } from '@/context/DataContext';
 
 const NAV_LINKS = [
   { label: 'next race', href: '#next-race' },
+  { label: 'playlist', href: '#playlist' },
   { label: 'schedule', href: '#schedule' },
   { label: 'watch', href: '#how-to-watch' },
   { label: 'standings', href: '#standings' }
@@ -14,7 +15,10 @@ const NAV_LINKS = [
 export default function Header() {
   const { theme, toggleTheme } = useTheme();
   const { timezone, timezoneLabel, timezoneOptions, setTimezone } = useTimezone();
-  const { activeSeason } = useData();
+  const { activeSeason, content, loading } = useData();
+  // The playlist section is hidden when its content can't be loaded, so its link is too
+  const hasPlaylist = !!content && !loading;
+  const links = NAV_LINKS.filter(l => hasPlaylist || l.href !== '#playlist');
   const [tzOpen, setTzOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('next-race');
@@ -45,7 +49,7 @@ export default function Header() {
     });
 
     return () => observers.forEach(o => o.disconnect());
-  }, []);
+  }, [hasPlaylist]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -82,7 +86,7 @@ export default function Header() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map(link => (
+            {links.map(link => (
               <button
                 key={link.href}
                 onClick={() => handleNavClick(link.href)}
@@ -159,7 +163,7 @@ export default function Header() {
             <X size={28} />
           </button>
           <nav className="flex flex-col items-center gap-10 text-2xl">
-            {NAV_LINKS.map(link => (
+            {links.map(link => (
               <button
                 key={link.href}
                 onClick={() => handleNavClick(link.href)}

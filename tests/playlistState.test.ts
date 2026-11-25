@@ -80,7 +80,7 @@ describe('weeks without a playlist', () => {
   it('soon in a race week, until the race is over', () => {
     expect(run(day(2), none)).toMatchObject({ kind: 'soon', raceName: 'Qatar Grand Prix' });
     expect(run('2026-11-30T00:00:00+05:30', none).kind).toBe('soon');
-    expect(run('2026-11-30T03:00:00+05:30', none)).toMatchObject({ kind: 'waiting', next: { name: 'Abu Dhabi Grand Prix' } });
+    expect(run('2026-11-30T03:00:00+05:30', none)).toMatchObject({ kind: 'waiting', message: null, next: { name: 'Abu Dhabi Grand Prix' } });
   });
 
   it('waiting computes the next drop from the calendar', () => {
@@ -110,7 +110,7 @@ describe('weeks without a playlist', () => {
 
   it('claims nothing about the season when the calendar failed', () => {
     const failed = { weekends: [], season: 2026, status: 'unavailable' as const };
-    expect(run('2026-12-20T00:00:00Z', none, failed)).toMatchObject({ next: null, seasonOver: null });
+    expect(run('2026-12-20T00:00:00Z', none, failed)).toMatchObject({ message: null, next: null, seasonOver: null });
   });
 });
 

@@ -5,6 +5,7 @@ import { DataProvider } from '@/context/DataContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import NextRaceSection from '@/sections/NextRaceSection';
+import PlaylistSection from '@/features/playlist/PlaylistSection';
 import ScheduleSection from '@/sections/ScheduleSection';
 import HowToWatchSection from '@/sections/HowToWatchSection';
 import StandingsSection from '@/sections/StandingsSection';
@@ -28,6 +29,7 @@ function App() {
               ) : (
                 <>
                   <NextRaceSection />
+                  <PlaylistSection />
                   <ScheduleSection />
                   <HowToWatchSection />
                   <StandingsSection />

@@ -5,6 +5,7 @@ import { useTimezone } from '@/context/TimezoneContext';
 import { fetchQualifying, fetchSeasonPoles, type QualifyingRow, type SeasonFastest } from '@/services/qualifying';
 import type { LayoutId, Week } from '@/features/playlist/content';
 import { raceMoment } from '@/features/playlist/playlistState';
+import PlaylistSection from '@/features/playlist/PlaylistSection';
 import { NowContext } from '@/features/playlist/time';
 import { buildCountdownCard, buildPlaylistCard, buildQualifyingCard, type CardModel, type CardType, type Format } from './cardModel';
 import { renderCard } from './render';
@@ -171,6 +172,7 @@ export default function Studio() {
           </div>
         </div>
       </div>
+      <PlaylistSection />
     </NowContext.Provider>
   );
 }

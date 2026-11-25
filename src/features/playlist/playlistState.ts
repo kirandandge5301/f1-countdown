@@ -31,6 +31,7 @@ export interface CalendarInfo {
 export interface NextDrop {
   at: number;
   name: string;
+  isRace: boolean;
 }
 
 export type PlaylistState =
@@ -42,7 +43,7 @@ export type PlaylistState =
   | { kind: 'dropped'; week: Week; playlist: Playlist }
   | { kind: 'soon'; raceName: string }
   | {
-      kind: 'waiting'; message: string; next: NextDrop | null; seasonOver: number | null;
+      kind: 'waiting'; message: string | null; next: NextDrop | null; seasonOver: number | null;
       last: { week: Week; playlist: Playlist } | null;
     };
 
@@ -95,9 +96,9 @@ export function getPlaylistState(content: Content, cal: CalendarInfo, now: Date)
   let next: NextDrop | null = null;
   if (nextWeek?.playlist) {
     const p = nextWeek.playlist;
-    next = { at: ms(p.tracks[0]?.revealAt ?? p.dropAt), name: raceNameFor(nextWeek, cal) ?? p.title };
+    next = { at: ms(p.tracks[0]?.revealAt ?? p.dropAt), name: raceNameFor(nextWeek, cal) ?? p.title, isRace: raceNameFor(nextWeek, cal) !== null };
   } else if (nextRace) {
-    next = { at: nextRace.week, name: nextRace.name };
+    next = { at: nextRace.week, name: nextRace.name, isRace: true };
   }
 
   let seasonOver: number | null = null;
@@ -110,9 +111,11 @@ export function getPlaylistState(content: Content, cal: CalendarInfo, now: Date)
     .filter((w): w is Week & { playlist: Playlist } => !!w.playlist && ms(w.playlist.dropAt) <= t)
     .sort((a, b) => ms(b.playlist.dropAt) - ms(a.playlist.dropAt))[0];
 
+  // The default message says there is no race: only when the calendar shows that to be true
+  const noRaceNow = cal.status === 'not-published' || (races.length > 0 && !races.some(r => r.week <= t && t < r.week + 7 * DAY));
   return {
     kind: 'waiting',
-    message: week?.offWeekMessage ?? content.defaultOffWeekMessage,
+    message: week?.offWeekMessage ?? (noRaceNow ? content.defaultOffWeekMessage : null),
     next, seasonOver,
     last: past ? { week: past, playlist: past.playlist } : null,
   };
