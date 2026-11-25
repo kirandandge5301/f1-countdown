@@ -9,6 +9,10 @@ import StaleCalendarNotice from '@/components/StaleCalendarNotice';
 import { getSessionDisplayName } from '@/services/openf1';
 import type { Session } from '@/services/openf1';
 import { CIRCUIT_INFO } from '@/data/circuitInfo';
+import { activeWeek } from '@/features/playlist/content';
+import { useSiteNow } from '@/features/playlist/useSiteNow';
+import ShareButton from '@/features/share/ShareButton';
+import { useQualifying } from '@/features/share/useQualifying';
 
 export default function NextRaceSection() {
   const { timezoneLabel } = useTimezone();
@@ -16,12 +20,15 @@ export default function NextRaceSection() {
     nextRace,
     heroState,
     totalRounds,
+    content,
     calendarError,
     calendarStaleSince,
     calendarLoading,
     refreshCalendar,
     loading: initialLoading
   } = useData();
+  const now = useSiteNow();
+  const qualifying = useQualifying();
   const loading = initialLoading || calendarLoading;
   const [sectionRef, isVisible] = useIntersectionObserver<HTMLDivElement>({ threshold: 0.1 });
 
@@ -44,18 +51,6 @@ export default function NextRaceSection() {
     : '';
 
   const circuitInfo = race ? CIRCUIT_INFO[race.meeting.meeting_name] : null;
-
-  const shareOnX = () => {
-    if (!race || !nextSessionTime) return;
-    const diff = nextSessionTime.getTime() - Date.now();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const raceName = race.meeting.meeting_name;
-
-    const tweet = `🏁 ${raceName} in ${days}d ${hours}h!\nTrack every session live at gpcountdown.com\n#F1`;
-
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`, '_blank');
-  };
 
   return (
     <section
@@ -127,7 +122,7 @@ export default function NextRaceSection() {
             </h1>
 
             <p className="text-[17px] md:text-xl font-medium text-[var(--text-secondary)] mb-10 md:mb-12 text-center md:text-left">
-              The roar is coming.
+              {activeWeek(content, now)?.tagline ?? 'The roar is coming.'}
             </p>
 
             {/* Countdown - Smaller & Better Balanced */}
@@ -166,17 +161,11 @@ export default function NextRaceSection() {
               </div>
             )}
 
-            {/* Share Button (only when there is a countdown to share) */}
-            {nextSessionTime && (
-              <div className="flex justify-center mb-12 md:mb-16">
-                <button
-                  onClick={shareOnX}
-                  className="px-8 py-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] text-[var(--text-primary)] text-sm font-medium flex items-center gap-2 transition-all active:scale-95"
-                >
-                  🏁 Share Countdown on X
-                </button>
-              </div>
-            )}
+            {/* Share cards */}
+            <div className="flex flex-wrap justify-center gap-3 mb-12 md:mb-16">
+              <ShareButton label="Share" type={qualifying ? 'qualifying' : 'countdown'} qualifying={qualifying} />
+              {qualifying && <ShareButton label="Share qualifying" type="qualifying" qualifying={qualifying} />}
+            </div>
 
             {/* Circuit Info */}
             {circuitInfo && (

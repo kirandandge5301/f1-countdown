@@ -10,7 +10,7 @@ import { buildCountdownCard, buildPlaylistCard, buildQualifyingCard, type CardMo
 import { renderCard } from './render';
 import { defaultEntry } from './defaultEntry';
 
-const FIELD = 'w-full rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)]';
+const FIELD = 'w-full rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)]';
 const LAYOUT_OPTIONS: Array<[LayoutId, string]> = [['N8', 'N8 Big number'], ['N7', 'N7 Night'], ['N3', 'N3 Thirds']];
 
 function CardPreview({ model, layout, format }: { model: CardModel; layout: LayoutId; format: Format }) {
@@ -28,7 +28,7 @@ function CardPreview({ model, layout, format }: { model: CardModel; layout: Layo
       .catch(err => console.error(err));
     return () => { current = false; };
   }, [model, layout, format]);
-  return <div ref={holder} className="w-full max-w-[389px] rounded-xl overflow-hidden border border-[var(--border-subtle)]" />;
+  return <div ref={holder} className="w-full max-w-[389px] rounded-2xl overflow-hidden border border-[var(--border-subtle)]" />;
 }
 
 export default function Studio() {
@@ -157,7 +157,7 @@ export default function Studio() {
             <label className="block text-xs text-[var(--text-secondary)]">Now (your device's time; empty = real time)
               <input type="datetime-local" className={FIELD} value={nowText} onChange={e => setNowText(e.target.value)} />
             </label>
-            <button onClick={copy} disabled={!week} className="w-full min-h-11 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-sm">
+            <button onClick={copy} disabled={!week} className="w-full min-h-11 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-sm">
               Copy entry JSON
             </button>
             <p className="text-xs text-[var(--text-secondary)]" role="status">
