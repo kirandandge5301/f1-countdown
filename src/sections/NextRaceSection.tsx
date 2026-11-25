@@ -113,7 +113,7 @@ export default function NextRaceSection() {
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#E10600]" />
                 <span className="text-[11px] font-medium tracking-[0.2em] text-[#E10600] uppercase">
-                  NEXT RACE WEEKEND
+                  {liveSession ? 'RACE WEEKEND' : 'NEXT RACE WEEKEND'}
                 </span>
               </div>
               <span className="font-mono text-xs text-[var(--text-tertiary)]">
